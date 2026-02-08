@@ -16,3 +16,5 @@ backend/data/
 
 pids/
 .DS_Store
+
+.notes/
