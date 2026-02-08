@@ -147,6 +147,20 @@ def initialize_session_state():
         load_persistent_state()
     except Exception:
         pass
+    
+    # Ensure to_add_goal has all keys, migrating old state if necessary
+    if "to_add_goal" in st.session_state and isinstance(st.session_state["to_add_goal"], dict):
+        defaults = {
+            "learning_goal": "",
+            "skill_gaps": [],
+            "learner_profile": {},
+            "learning_path": [],
+            "is_completed": False,
+            "is_deleted": False
+        }
+        for k, v in defaults.items():
+            if k not in st.session_state["to_add_goal"]:
+                st.session_state["to_add_goal"][k] = v
 
 def get_new_goal_uid():
     return max(goal["id"] for goal in st.session_state.goals) + 1 if st.session_state.goals else 0

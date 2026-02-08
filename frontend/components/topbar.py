@@ -56,8 +56,9 @@ def render_topbar():
             settings()
 
     available_models = st.session_state.get("available_models", [])
-    if st.session_state["llm_type"] in available_models:
-        index = available_models.index(st.session_state["llm_type"])
+    llm_type = st.session_state.get("llm_type")
+    if llm_type in available_models:
+        index = available_models.index(llm_type)
     else:
         index = 0
 
@@ -69,7 +70,7 @@ def render_topbar():
             index=index,
             label_visibility="collapsed",
         )
-        if len(available_models) > 0 and llm_label != st.session_state["llm_type"]:
+        if len(available_models) > 0 and llm_label != st.session_state.get("llm_type"):
             st.session_state["llm_type"] = llm_label
             try:
                 save_persistent_state()

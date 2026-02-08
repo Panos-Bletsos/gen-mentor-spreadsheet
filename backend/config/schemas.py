@@ -7,8 +7,8 @@ from typing import Optional
 @dataclass
 class LLMConfig:
     """Configuration for the LLM provider. See LangChain documentation for details."""
-    provider: str = "deepseek"  # e.g., openai, azure-openai, ollama, anthropic, groq
-    model_name: str = "deepseek-chat"
+    provider: str = "openai"  # e.g., openai, azure-openai, ollama, anthropic, groq
+    model_name: str = "gpt-4o"
     base_url: Optional[str] = None
 
 
