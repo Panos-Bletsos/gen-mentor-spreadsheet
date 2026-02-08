@@ -6,8 +6,8 @@ debug: true
 log_level: INFO
 
 llm:
-  provider: deepseek
-  model_name: deepseek-chat
+  provider: openai
+  model_name: gpt-4o
   base_url: null
 
 embedding:

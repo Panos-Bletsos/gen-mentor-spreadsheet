@@ -373,7 +373,6 @@ def render_document_content_by_section(document):
         st.session_state["if_render_qizzes"] = False
 
     
-
 def render_document_content_by_document(document):
     st.session_state["if_render_qizzes"] = True
 

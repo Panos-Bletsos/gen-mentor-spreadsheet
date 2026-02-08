@@ -1,17 +1,20 @@
-langchain-core==1.0.0
+langchain-core==1.2.7
 langchain==1.0.0
 langchain-community==1.0.0a1
 langchain-chroma==1.0.0
 langchain-huggingface==1.0.0
+langchain-deepseek==1.0.1
 langchain-docling
 
 
 duckduckgo-search
+ddgs
 sentence-transformers
 
 hydra-core
 beautifulsoup4
 fastapi
+python-multipart
 pypdf
 pdfplumber
 pypinyin

@@ -23,7 +23,14 @@ def _init_onboarding_state():
     st.session_state.setdefault("learner_occupation", "")
     st.session_state.setdefault("learner_information_text", "")
     st.session_state.setdefault("learner_information", "")
-    st.session_state.setdefault("to_add_goal", {"learning_goal": ""})
+    st.session_state.setdefault("to_add_goal", {
+        "learning_goal": "",
+        "skill_gaps": [],
+        "learner_profile": {},
+        "learning_path": [],
+        "is_completed": False,
+        "is_deleted": False
+    })
     try:
         save_persistent_state()
     except Exception:

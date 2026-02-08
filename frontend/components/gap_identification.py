@@ -9,11 +9,13 @@ def render_identifying_skill_gap(goal):
         learner_information = st.session_state["learner_information"]
         llm_type = st.session_state["llm_type"]
         skill_gaps = identify_skill_gap(learning_goal, learner_information, llm_type)
-    goal["skill_gaps"] = skill_gaps
-    save_persistent_state()
-    st.rerun()
-    st.toast("🎉 Successfully identify skill gaps!")
-    return skill_gaps
+    if skill_gaps:
+        goal["skill_gaps"] = skill_gaps
+        save_persistent_state()
+        st.toast("🎉 Successfully identify skill gaps!")
+        st.rerun()
+    else:
+        st.error("Failed to identify skill gaps. Please try again or check backend connection.")
 
 
 def render_identified_skill_gap(goal, method_name="genmentor"):

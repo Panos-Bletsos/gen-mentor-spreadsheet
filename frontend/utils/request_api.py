@@ -24,6 +24,13 @@ API_NAMES = {
 }
 
 
+def parse_llm_settings(llm_type):
+    if "/" in llm_type:
+        parts = llm_type.split("/", 1)
+        return parts[0].lower(), parts[1]
+    return "openai", "gpt-4o"
+
+
 def make_post_request(api_name, data, mock_data_path=None, timeout=500):
     """Send a POST request to the backend API, or return mock data if enabled."""
     if use_mock_data and mock_data_path:
@@ -66,34 +73,43 @@ def chat_with_tutor(chat_messages, learner_profile, llm_type="gpt4o", method_nam
     return response.get("response") if response else None
 
 def refine_learning_goal(learning_goal, learner_information, llm_type="gpt4o", method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
         "learner_information": str(learner_information),
         "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["refine_goal"], data)
     return response.get("refined_goal") if response else "Refined learning goal"
 
 @st.cache_resource
 def identify_skill_gap(learning_goal, learner_information, llm_type="gpt4o", method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
         "learner_information": str(learner_information),
         "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["identify_skill_gap"], data, "./assets/data_example/skill_gap.json")
     return response.get("skill_gaps") if response else None
 
 @st.cache_resource
 def create_learner_profile(learning_goal, learner_information, skill_gaps, llm_type="gpt4o", method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
         "learner_information": str(learner_information),
         "skill_gaps": str(skill_gaps),
         "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["create_profile"], data, "./assets/data_example/learner_profile.json")
     return response.get("learner_profile") if response else None
