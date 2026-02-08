@@ -277,11 +277,11 @@ def render_document_content_by_section(document):
     page_key = f"{selected_gid}-{session_id}"
     params = {}
     try:
-        if hasattr(st, 'query_params') and isinstance(st.query_params, dict):
+        if hasattr(st, 'query_params'):
             params = dict(st.query_params)
     except Exception:
         pass
-    if not params and hasattr(st, 'experimental_get_query_params'):
+    if not params and not hasattr(st, 'query_params') and hasattr(st, 'experimental_get_query_params'):
         try:
             raw = st.experimental_get_query_params()
             params = {k: (v[0] if isinstance(v, list) and v else v) for k, v in raw.items()}
