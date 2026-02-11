@@ -21,6 +21,7 @@ API_NAMES = {
     "draft_knowledge_points": "draft-knowledge-points",
     "integrate_learning_document": "integrate-learning-document",
     "generate_document_quizzes": "generate-document-quizzes",
+    "generate_synthetic_sheet_data": "generate-synthetic-sheet-data",
 }
 
 
@@ -221,3 +222,23 @@ def integrate_learning_document(learner_profile, learning_path, learning_session
         return response.get("learning_document") if response else None
     else:
         return response.get("learning_document") if response else None
+
+
+def generate_synthetic_sheet_data(
+    user_request,
+    row_count=20,
+    columns=None,
+    constraints="",
+    llm_type=None,
+):
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    data = {
+        "user_request": str(user_request),
+        "row_count": int(row_count),
+        "columns": columns if columns else None,
+        "constraints": str(constraints),
+        "model_provider": model_provider,
+        "model_name": model_name,
+    }
+    return make_post_request(API_NAMES["generate_synthetic_sheet_data"], data)

@@ -53,7 +53,7 @@ class LLMFactory:
         if api_key is not None:
             config_kwargs["api_key"] = api_key
         elif base_url is not None and model_provider == "openai":
-            config_kwargs["api_key"] = "dummy-key-for-vllm"
+            config_kwargs["api_key"] = "synthetic-key-for-vllm"
 
         llm = init_chat_model(**config_kwargs)
         return llm

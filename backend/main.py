@@ -15,6 +15,7 @@ from modules.skill_gap_identification import *
 from modules.adaptive_learner_modeling import *
 from modules.personalized_resource_delivery import *
 from modules.ai_chatbot_tutor import chat_with_tutor_with_llm
+from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
 from api_schemas import *
 from config import load_config
 
@@ -331,6 +332,22 @@ async def tailor_knowledge_content(request: TailoredContentGenerationRequest):
             llm, learner_profile, learning_path, learning_session, allow_parallel=allow_parallel, with_quiz=with_quiz, use_search=use_search
         )
         return {"tailored_content": tailored_content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate-synthetic-sheet-data")
+async def generate_synthetic_sheet_data(request: SyntheticSheetDataGenerationRequest):
+    llm = get_llm(request.model_provider, request.model_name)
+    try:
+        result = generate_synthetic_spreadsheet_data_with_llm(
+            llm,
+            user_request=request.user_request,
+            row_count=request.row_count,
+            columns=request.columns,
+            constraints=request.constraints,
+        )
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

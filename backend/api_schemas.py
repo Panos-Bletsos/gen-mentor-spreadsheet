@@ -170,3 +170,11 @@ class LearningDocumentIntegrationRequest(BaseModel):
     knowledge_points: str
     knowledge_drafts: str
     output_markdown: bool = False
+
+
+class SyntheticSheetDataGenerationRequest(BaseRequest):
+
+    user_request: str
+    row_count: int = 20
+    columns: Optional[list[str]] = None
+    constraints: str = ""
