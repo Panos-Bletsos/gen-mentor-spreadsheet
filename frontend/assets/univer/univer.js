@@ -16,7 +16,96 @@ var univerAPI;
 
     univerAPI = result.univerAPI;
     univerAPI.createWorkbook(window.__WORKBOOK_DATA__ || { name: "GenMentor Sheet" });
+
+    // --- Selection / focus tracking ---
+    setupSelectionTracking();
 })();
+
+/**
+ * Convert a 0-based column index to a spreadsheet column letter (0 → A, 25 → Z, 26 → AA, …)
+ */
+function columnIndexToLetter(index) {
+    var letter = "";
+    var n = index;
+    while (n >= 0) {
+        letter = String.fromCharCode((n % 26) + 65) + letter;
+        n = Math.floor(n / 26) - 1;
+    }
+    return letter;
+}
+
+/**
+ * Get the current active cell position.
+ * Returns { row, col, rowDisplay, colLetter, cellRef } or null.
+ */
+function getActiveCellPosition() {
+    try {
+        var workbook = univerAPI.getActiveWorkbook();
+        if (!workbook) return null;
+        var sheet = workbook.getActiveSheet();
+        if (!sheet) return null;
+        var selection = sheet.getSelection();
+        if (!selection) return null;
+        var range = selection.getActiveRange();
+        if (!range) return null;
+
+        var row = range.getRow();        // 0-based
+        var col = range.getColumn();     // 0-based
+        var colLetter = columnIndexToLetter(col);
+        var cellRef = colLetter + (row + 1); // e.g. "B3"
+
+        return {
+            row: row,
+            col: col,
+            rowDisplay: row + 1,         // 1-based for display
+            colLetter: colLetter,
+            cellRef: cellRef,
+        };
+    } catch (e) {
+        console.warn("Could not read active cell:", e);
+        return null;
+    }
+}
+
+/**
+ * Wire up a listener that fires whenever the selection changes
+ * and updates the cell-info display.
+ */
+function setupSelectionTracking() {
+    var cellInfoEl = document.getElementById("cell-info");
+
+    function updateCellInfo() {
+        var pos = getActiveCellPosition();
+        if (!cellInfoEl) return;
+        
+        if (!pos) {
+            cellInfoEl.innerHTML = '<span style="color: #999;">Click on a cell to see its position</span>';
+            return;
+        }
+
+        // Update the cell info display
+        cellInfoEl.innerHTML = 
+            '<span style="font-weight: 600; color: #1e40af;">Active Cell:</span> ' +
+            '<code style="background: white; padding: 2px 8px; border: 1px solid #3b82f6; border-radius: 3px; font-weight: 700; color: #1e40af;">' + 
+            pos.cellRef + 
+            '</code> ' +
+            '<span style="color: #6b7280;">|</span> ' +
+            '<span style="color: #374151;">Row <strong>' + pos.rowDisplay + '</strong>, Column <strong>' + pos.colLetter + '</strong></span>';
+    }
+
+    try {
+        var workbook = univerAPI.getActiveWorkbook();
+        if (workbook) {
+            workbook.onSelectionChange(function (_selection) {
+                updateCellInfo();
+            });
+        }
+        // Initial update
+        updateCellInfo();
+    } catch (e) {
+        console.warn("Could not register selection listener:", e);
+    }
+}
 
 function getWorkbookSnapshot() {
     try {

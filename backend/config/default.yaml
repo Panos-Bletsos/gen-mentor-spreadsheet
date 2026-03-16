@@ -7,7 +7,7 @@ log_level: INFO
 
 llm:
   provider: openai
-  model_name: gpt-4o
+  model_name: gpt-5-nano
   base_url: null
 
 embedding:
