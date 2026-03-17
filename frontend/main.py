@@ -100,6 +100,7 @@ learner_profile = st.Page("pages/learner_profile.py", title="My Profile", icon="
 goal_management = st.Page("pages/goal_management.py", title="Goal Management", icon=":material/flag:", default=False, url_path="goal_management")
 dashboard = st.Page("pages/dashboard.py", title="Analytics Dashboard", icon=":material/browse:", default=False, url_path="dashboard")
 sheets = st.Page("pages/sheets.py", title="Sheets", icon=":material/grid_on:", default=False, url_path="sheets")
+exercise = st.Page("pages/exercise.py", title="Exercise", icon=":material/edit_note:", default=False, url_path="exercise")
 
 # Learning Analytics Dashboard
 if not st.session_state["if_complete_onboarding"]:
@@ -107,7 +108,7 @@ if not st.session_state["if_complete_onboarding"]:
     pg = st.navigation({"GenMentor": [onboarding, skill_gaps, learning_path]}, position="hidden", expanded=True)
 else:
     nav_position = "sidebar"
-    pg = st.navigation({"GenMentor": [goal_management, learning_path, knowledge_document, learner_profile, dashboard, sheets]}, position=nav_position, expanded=True)
+    pg = st.navigation({"GenMentor": [goal_management, learning_path, knowledge_document, exercise, learner_profile, dashboard, sheets]}, position=nav_position, expanded=True)
     with st.sidebar:
         _left, _center, _right = st.columns([2, 2, 2])
         with _center:

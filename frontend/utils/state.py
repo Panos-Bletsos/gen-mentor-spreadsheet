@@ -29,7 +29,7 @@ PERSIST_KEYS = [
     "userId",
     "document_caches",
     "session_learning_times",
-    
+    "exercise_messages",
 ]
 
 
@@ -104,6 +104,9 @@ def initialize_session_state():
 
     if "tutor_messages" not in st.session_state:
         st.session_state["tutor_messages"] = []
+
+    if "exercise_messages" not in st.session_state:
+        st.session_state["exercise_messages"] = []
 
     if "selected_page" not in st.session_state:
         st.session_state["selected_page"] = "Onboarding"
