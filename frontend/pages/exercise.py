@@ -4,88 +4,192 @@ import streamlit as st
 import streamlit.components.v1 as components
 from assets.js.univer_sheets import get_univer_sheets_html
 from utils.sheet_data_parser import build_univer_workbook_from_payload
+from utils.request_api import start_exercise, chat_with_tutor_exercise, update_learner_profile
+
+st.markdown(
+    "<style>" + open("./assets/css/main.css").read() + "</style>",
+    unsafe_allow_html=True,
+)
 
 
-st.markdown('<style>' + open('./assets/css/main.css').read() + '</style>', unsafe_allow_html=True)
+def parse_brainstorming_done(text):
+    """Check if tutor response contains brainstorming_done JSON signal.
+    Uses brace-counting to extract nested JSON with exercise_topic object.
+    """
+    marker = '"brainstorming_done"'
+    idx = text.find(marker)
+    if idx == -1:
+        return text, None
+    start = text.rfind("{", 0, idx)
+    if start == -1:
+        return text, None
+    depth = 0
+    end = start
+    for i in range(start, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    if depth != 0:
+        return text, None
+    try:
+        signal = json.loads(text[start:end])
+        if signal.get("brainstorming_done"):
+            display_text = text[:start].strip()
+            return display_text, signal.get("exercise_topic", {})
+    except json.JSONDecodeError:
+        pass
+    return text, None
 
-MOCK_EXERCISE = {
-    "title": "SUM and AVERAGE Practice",
-    "description": (
-        "Calculate the **total** and **average** quarterly sales for each region.\n\n"
-        "- In the **Total** column, use the `SUM` function to add Q1 through Q4.\n"
-        "- In the **Average** column, use the `AVERAGE` function over the same range.\n\n"
-        "Try typing formulas directly in the spreadsheet cells below."
-    ),
-    "spreadsheet_data": {
-        "headers": ["Region", "Q1", "Q2", "Q3", "Q4", "Total", "Average"],
-        "rows": [
-            ["North", 1200, 1500, 1800, 1600, "", ""],
-            ["South", 900, 1100, 1300, 1000, "", ""],
-            ["East", 1400, 1600, 1900, 1700, "", ""],
-            ["West", 800, 950, 1100, 1050, "", ""],
-        ],
-    },
-}
 
-MOCK_TUTOR_REPLIES = [
-    "Great question! For the Total column, try using `=SUM(B2:E2)` in cell F2, then drag down to fill the other rows.",
-    "The AVERAGE function works similarly: `=AVERAGE(B2:E2)` in cell G2. You can also select the range with your mouse!",
-    "You're doing well! Remember that SUM adds all values in a range, while AVERAGE divides the sum by the count.",
-    "If you see an error, double-check that your cell references match the data range. The numbers are in columns B through E.",
-]
+def get_exercise_phase():
+    phase = st.session_state.get("exercise_phase")
+    if phase:
+        return phase
+    params = st.query_params
+    topic = params.get("topic")
+    if topic:
+        st.session_state["exercise_topic"] = topic
+        return "loading"
+    return "brainstorming"
 
 
-def render_exercise():
+# ---------------------------------------------------------------------------
+# Phase: Brainstorming
+# ---------------------------------------------------------------------------
+
+def render_brainstorming():
     left_col, right_col = st.columns([1.5, 1], gap="large")
 
     with left_col:
-        st.header(MOCK_EXERCISE["title"])
-        st.markdown(MOCK_EXERCISE["description"])
+        st.header("Practice Mode")
+        st.info("Chat with the AI tutor to decide what you'd like to practice. The spreadsheet will load once we've picked an exercise.")
 
-        workbook = build_univer_workbook_from_payload(
-            MOCK_EXERCISE["spreadsheet_data"],
-            sheet_name="Sales Data",
-            workbook_name="Exercise Sheet",
+    with right_col:
+        st.subheader("AI Tutor")
+
+        if not st.session_state["exercise_messages"]:
+            st.session_state["exercise_messages"].append({
+                "role": "assistant",
+                "content": "Hi! What would you like to practice today? You can tell me a specific skill (like VLOOKUP or pivot tables) or a domain you're interested in (like sales analysis or financial modeling).",
+            })
+
+        chat_container = st.container(height=500)
+        with chat_container:
+            for msg in st.session_state["exercise_messages"]:
+                st.chat_message(msg["role"]).write(msg["content"])
+
+        if prompt := st.chat_input("Tell me what you want to practice..."):
+            st.session_state["exercise_messages"].append({"role": "user", "content": prompt})
+
+            with st.spinner("Thinking..."):
+                reply = chat_with_tutor_exercise(
+                    st.session_state["exercise_messages"],
+                    st.session_state.get("learner_profile", ""),
+                    mode="brainstorming",
+                )
+
+            if reply:
+                display_text, exercise_topic = parse_brainstorming_done(reply)
+                st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
+
+                if exercise_topic:
+                    st.session_state["exercise_topic"] = exercise_topic
+                    st.session_state["exercise_phase"] = "loading"
+                    st.rerun()
+            else:
+                st.session_state["exercise_messages"].append({
+                    "role": "assistant",
+                    "content": "I'm having trouble connecting right now. Could you try again?",
+                })
+
+            st.rerun()
+
+        student_msg_count = sum(1 for m in st.session_state["exercise_messages"] if m["role"] == "user")
+        if student_msg_count >= 6:
+            if st.button("Ready to start the exercise"):
+                st.session_state["exercise_messages"].append({
+                    "role": "user",
+                    "content": "Let's start the exercise based on what we discussed.",
+                })
+                with st.spinner("Finalizing exercise topic..."):
+                    reply = chat_with_tutor_exercise(
+                        st.session_state["exercise_messages"],
+                        st.session_state.get("learner_profile", ""),
+                        mode="brainstorming",
+                    )
+                if reply:
+                    _, exercise_topic = parse_brainstorming_done(reply)
+                    if exercise_topic:
+                        st.session_state["exercise_topic"] = exercise_topic
+                        st.session_state["exercise_phase"] = "loading"
+                        st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Phase: Loading
+# ---------------------------------------------------------------------------
+
+def render_loading():
+    st.header("Generating your exercise...")
+    with st.spinner("The AI is creating a personalized exercise for you. This may take 20-40 seconds..."):
+        topic = st.session_state.get("exercise_topic") or "general spreadsheet practice"
+        result = start_exercise(
+            topic=topic,
+            learner_profile=st.session_state.get("learner_profile", ""),
+            brainstorming_history=st.session_state.get("exercise_messages", []),
         )
-        workbook_json = json.dumps(workbook)
-        univer_html = get_univer_sheets_html(height="100%", workbook_data=workbook_json)
-        # Strip UI down to formula bar + cells only
-        strip_css = """<style>
-            #toolbar { display: none !important; }
-            #cell-info { display: none !important; }
-            #app { height: 100% !important; }
-            /* Hide Univer toolbar/ribbon/header elements */
-            [role="toolbar"] { display: none !important; }
-            [role="menubar"] { display: none !important; }
-            [role="menu"] { display: none !important; }
-            /* Hide elements that are likely the formatting toolbar */
-            div[style*="flex"][style*="row"] > button,
-            div[style*="flex"][style*="row"] > [role="button"] { display: none !important; }
-            /* Generic: hide button collections that are top-aligned (toolbar pattern) */
-            div:has(> button):has(> button + button) { display: none !important; }
-        </style>"""
-        strip_js = """<script>
-        (function hideUniversToolbar() {
-            var timer = setInterval(function() {
-                var app = document.getElementById('app');
-                if (!app) return;
-                var allDivs = app.querySelectorAll('div');
-                allDivs.forEach(function(el) {
-                    // If div has many button/icon children (toolbar pattern), hide it
-                    var btnCount = el.querySelectorAll(':scope > button, :scope > [role="button"], :scope > svg').length;
-                    if (btnCount >= 3 && el.offsetHeight < 100) {
-                        el.style.display = 'none';
-                    }
-                });
-                clearInterval(timer);
-            }, 200);
-        })();
-        </script>"""
-        univer_html = univer_html.replace("</head>", strip_css + "</head>")
-        univer_html = univer_html.replace("</body>", strip_js + "</body>")
-        nonce = str(time.time())
-        univer_html += f"<!-- nonce:{nonce} -->"
-        components.html(univer_html, height=600, scrolling=False)
+
+    if result and "exercise_plan" in result:
+        st.session_state["exercise_plan"] = result
+        st.session_state["exercise_messages"].append({
+            "role": "assistant",
+            "content": result["tutor_message"],
+        })
+        st.session_state["exercise_phase"] = "exercising"
+        st.rerun()
+    else:
+        st.error("Could not generate exercise. Please try again.")
+        if st.button("Go back to brainstorming"):
+            st.session_state["exercise_phase"] = "brainstorming"
+            st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Phase: Exercising
+# ---------------------------------------------------------------------------
+
+def render_exercising():
+    result = st.session_state.get("exercise_plan", {})
+    plan = result.get("exercise_plan", {})
+    spreadsheet_data = result.get("spreadsheet_data", {})
+
+    left_col, right_col = st.columns([1.5, 1], gap="large")
+
+    with left_col:
+        title = plan.get("scenario", "Exercise")[:80]
+        st.header(title)
+
+        # Load first sheet into Univer (multi-sheet support is a follow-up)
+        sheets = spreadsheet_data.get("sheets", [])
+        if sheets:
+            first_sheet = sheets[0]
+            payload = {"headers": first_sheet.get("headers", []), "rows": first_sheet.get("rows", [])}
+            workbook = build_univer_workbook_from_payload(
+                payload,
+                sheet_name=first_sheet.get("name", "Sheet1"),
+                workbook_name="Exercise",
+            )
+            workbook_json = json.dumps(workbook)
+            univer_html = get_univer_sheets_html(height="100%", workbook_data=workbook_json)
+            nonce = str(time.time())
+            univer_html += f"<!-- nonce:{nonce} -->"
+            components.html(univer_html, height=600, scrolling=False)
+        else:
+            st.warning("No spreadsheet data available.")
 
     with right_col:
         st.subheader("AI Tutor")
@@ -98,11 +202,117 @@ def render_exercise():
         if prompt := st.chat_input("Ask about this exercise..."):
             st.session_state["exercise_messages"].append({"role": "user", "content": prompt})
 
-            reply_idx = len(st.session_state["exercise_messages"]) // 2
-            reply = MOCK_TUTOR_REPLIES[reply_idx % len(MOCK_TUTOR_REPLIES)]
-            st.session_state["exercise_messages"].append({"role": "assistant", "content": reply})
+            exercise_context = {
+                "plan": plan,
+                "sheet_snapshot": {},  # Populated by postMessage bridge when available
+            }
+
+            with st.spinner("Thinking..."):
+                reply = chat_with_tutor_exercise(
+                    st.session_state["exercise_messages"],
+                    st.session_state.get("learner_profile", ""),
+                    mode="exercise",
+                    exercise_context=exercise_context,
+                )
+
+            if reply:
+                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply})
+            else:
+                st.session_state["exercise_messages"].append({
+                    "role": "assistant",
+                    "content": "I'm having trouble connecting. Please try again.",
+                })
 
             st.rerun()
+
+        # Finish exercise button
+        st.divider()
+        if st.button("Finish Exercise", type="primary"):
+            st.session_state["exercise_messages"].append({
+                "role": "user",
+                "content": "[SYSTEM] The student has finished the exercise. Please summarize their performance: what they did well, what they struggled with, and what to practice next.",
+            })
+            with st.spinner("Generating feedback..."):
+                exercise_context = {
+                    "plan": plan,
+                    "sheet_snapshot": {},
+                }
+                reply = chat_with_tutor_exercise(
+                    st.session_state["exercise_messages"],
+                    st.session_state.get("learner_profile", ""),
+                    mode="exercise",
+                    exercise_context=exercise_context,
+                )
+
+            if reply:
+                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply})
+
+            # Update learner profile with performance data
+            with st.spinner("Updating your learner profile..."):
+                perf_reply = chat_with_tutor_exercise(
+                    st.session_state["exercise_messages"] + [
+                        {"role": "user", "content": '[SYSTEM] Output a JSON performance summary: {"skills_practiced": [...], "completed_steps": N, "total_steps": N, "struggled_with": [...], "hints_requested": N}'}
+                    ],
+                    st.session_state.get("learner_profile", ""),
+                    mode="exercise",
+                    exercise_context=exercise_context,
+                )
+                if perf_reply:
+                    try:
+                        perf_data = json.loads(perf_reply)
+                    except json.JSONDecodeError:
+                        perf_data = {}
+                    if perf_data:
+                        session_info = {
+                            "type": "exercise",
+                            "topic": str(st.session_state.get("exercise_topic", "")),
+                            "scenario": plan.get("scenario", ""),
+                            "performance": perf_data,
+                        }
+                        update_learner_profile(
+                            st.session_state.get("learner_profile", ""),
+                            str(st.session_state.get("exercise_messages", [])),
+                            session_information=str(session_info),
+                        )
+
+            st.session_state["exercise_phase"] = "completed"
+            st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Phase: Completed
+# ---------------------------------------------------------------------------
+
+def render_completed():
+    st.header("Exercise Complete!")
+
+    chat_container = st.container(height=500)
+    with chat_container:
+        for msg in st.session_state["exercise_messages"]:
+            st.chat_message(msg["role"]).write(msg["content"])
+
+    if st.button("Start a New Exercise"):
+        st.session_state["exercise_phase"] = "brainstorming"
+        st.session_state["exercise_messages"] = []
+        st.session_state["exercise_plan"] = None
+        st.session_state["exercise_topic"] = None
+        st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def render_exercise():
+    phase = get_exercise_phase()
+    if phase == "loading":
+        render_loading()
+    elif phase == "exercising":
+        render_exercising()
+    elif phase == "completed":
+        render_completed()
+    else:
+        render_brainstorming()
 
 
 render_exercise()
