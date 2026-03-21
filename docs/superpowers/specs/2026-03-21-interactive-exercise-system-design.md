@@ -16,17 +16,43 @@ Add a "learn by doing" exercise system to GenMentor where students practice spre
 6. Student works in spreadsheet, chats with tutor for guidance. Each chat message includes a snapshot of the current spreadsheet state.
 7. Student finishes — tutor gives feedback, system updates learner profile
 
-### On-Demand (sidebar)
+### On-Demand (practise)
 
-Same flow, but no pre-selected topic. The tutor's first message asks what the student wants to practice. The student can request:
+A new page which contains an empty spreadsheet with a chat sidebar. The tutor's first message asks what the student wants to practice. The student can request:
 - **Technical skills:** "I want to practice VLOOKUP"
 - **Domain skills:** "I want to learn how to do product analytics" or "clickstream analysis"
 
-The Plan Exercise step figures out which spreadsheet functions are needed for the requested domain and builds an exercise around it. The chat is the topic picker — no separate UI needed.
+The tutor first brainstorms with the student to understand student's intentions and help tailor the use case to student's needs, for example if the student mentions a technical skill the tutor can ask what is the goal, for which domain etc.
+
+Then the Plan Exercise step figures out which spreadsheet functions are needed for the requested domain and builds an exercise around it. The chat is the topic picker — no separate UI needed.
 
 After the student responds with a topic, the frontend calls `/start-exercise` and the flow continues as above.
 
-**Topic detection mechanism:** The first chat message in on-demand mode is always treated as the topic. The frontend does not need to distinguish between "topic selection" and "follow-up" — it simply takes the student's first message, passes it as the `topic` field to `/start-exercise`, and transitions to exercise mode. If the student's message is vague or off-topic, the Plan Exercise LLM call handles interpretation (e.g., "I'm not sure" → the planner picks a recommended topic based on the learner profile).
+**Topic detection mechanism:** The tutor selects the topic after an agreement with student once the brainstorming session has finished.
+
+### Brainstorming Mode
+
+The on-demand brainstorming conversation reuses the existing `/chat-with-tutor` endpoint with a new `mode` field. No new endpoint needed.
+
+**Mode values:** `"general"` (default, backward-compatible) | `"brainstorming"` | `"exercise"`
+
+In brainstorming mode, the `AITutorChatbot` uses a dedicated task prompt that instructs the tutor to:
+- Ask what the student wants to practice
+- If the student names a technical skill (e.g., "VLOOKUP"), ask about the domain, goal, and context
+- If the student names a domain skill (e.g., "product analytics"), explore which spreadsheet functions would be useful
+- Converge within 3-5 turns — the tutor should not keep asking questions indefinitely
+
+**Done signal:** When the tutor decides brainstorming is complete (mutual agreement reached), it appends a structured JSON block to its response:
+
+```
+Great, let's build an exercise around looking up employee data!
+
+{"brainstorming_done": true, "exercise_topic": {"skill": "VLOOKUP", "domain": "HR", "goal": "look up employee names from IDs across departments", "difficulty_hint": "beginner"}}
+```
+
+The frontend parses each tutor response for this JSON block. If found, it strips the JSON from the displayed message, extracts the `exercise_topic` object, and calls `/start-exercise` with it.
+
+**Fallback:** If the tutor hasn't signaled after 6+ student messages, the frontend shows a "Ready to start?" button. Clicking it sends a final message to the tutor instructing it to produce the `exercise_topic` JSON based on the conversation so far.
 
 ## Backend Architecture
 
@@ -35,10 +61,14 @@ After the student responds with a topic, the frontend calls `/start-exercise` an
 **Input:**
 ```json
 {
-  "topic": "VLOOKUP",
-  "learner_profile": { ... }
+  "topic": "VLOOKUP" | {"skill": "VLOOKUP", "domain": "HR", "goal": "...", "difficulty_hint": "beginner"},
+  "learner_profile": { ... },
+  "brainstorming_history": []
 }
 ```
+
+- `topic` is either a simple string (from learning path) or an `ExerciseTopic` object (from brainstorming). The Plan Exercise step handles both formats.
+- `brainstorming_history` is optional — the conversation messages from the brainstorming phase. Provides additional context for the planner but is not required.
 
 **Output:**
 ```json
@@ -199,10 +229,11 @@ Both value and formula are captured so the tutor can distinguish between correct
 
 ### Exercise Page States
 
-The exercise page (`frontend/pages/exercise.py`) handles two states:
+The exercise page (`frontend/pages/exercise.py`) handles three states, tracked via `st.session_state["exercise_phase"]`:
 
-- **Topic provided** (from learning path): calls `/start-exercise` immediately on page load, shows loading state, then renders spreadsheet + tutor message
-- **No topic** (on-demand): shows empty chat, tutor asks what to practice, calls `/start-exercise` after student responds
+- **`topic_provided`** (from learning path): calls `/start-exercise` immediately on page load, shows loading spinner, then transitions to `exercising`
+- **`brainstorming`** (on-demand): spreadsheet area shows placeholder or is hidden. Chat sidebar active. Tutor asks what to practice. Each student message goes to `/chat-with-tutor` with `mode: "brainstorming"`. When tutor response contains the `brainstorming_done` JSON signal, transitions to loading state and calls `/start-exercise` with the enriched `ExerciseTopic`.
+- **`exercising`**: spreadsheet loaded with exercise data, tutor guides student via `/chat-with-tutor` with `mode: "exercise"` and `exercise_context`
 
 ### Layout
 
@@ -229,13 +260,15 @@ Each chat message to `/chat-with-tutor` during an exercise includes:
 
 ### Extended `/chat-with-tutor` endpoint
 
-The existing endpoint is extended to accept an optional `exercise_context` field. The integration point is the `AITutorChatbot` agent class in `backend/modules/ai_chatbot_tutor/agents/ai_chatbot_tutor.py`:
+The existing endpoint is extended with two new optional fields: `mode` and `exercise_context`. The integration point is the `AITutorChatbot` agent class in `backend/modules/ai_chatbot_tutor/agents/ai_chatbot_tutor.py`:
 
-- Add `exercise_context` as an optional field on `TutorChatPayload`
-- In `AITutorChatbot.chat()`, if `exercise_context` is present, inject it into `input_vars` alongside `learner_profile` and `messages`
-- The system prompt template (`ai_tutor_chatbot_system_prompt`) is extended with a conditional section: if exercise context is provided, include the exercise plan and spreadsheet snapshot in the prompt
+- Add `mode: str = "general"` and `exercise_context: Optional[dict] = None` to `TutorChatPayload`
+- In `AITutorChatbot.chat()`, route to different task prompts based on mode:
+  - `"general"` → existing behavior (backward compatible)
+  - `"brainstorming"` → brainstorming task prompt (explores student goals, outputs `exercise_topic` JSON when done)
+  - `"exercise"` → exercise task prompt with `exercise_context` (plan + spreadsheet snapshot) injected into `input_vars`
 
-The endpoint in `main.py` passes the new field through. If `exercise_context` is absent, behavior is unchanged.
+The endpoint in `main.py` passes the new fields through. If `mode` is absent, defaults to `"general"`. If `exercise_context` is absent, behavior is unchanged.
 
 ### Tutor behaviors in exercise mode
 
@@ -295,11 +328,10 @@ The frontend then calls the existing `/update-learner-profile` endpoint with the
 - PostMessage bridge for snapshot-based spreadsheet awareness
 - Exercise context in `/chat-with-tutor`
 - Exercise completion with feedback + profile update
-- On-demand mode via chat-driven topic selection
+- On-demand brainstorming conversation for exercise topic selection (via `mode: "brainstorming"` on `/chat-with-tutor`)
 
 **Explicitly out of scope (future work):**
 - Event-based real-time spreadsheet awareness (streaming cell changes)
-- Brainstorming skill for the tutor (conversational exercise design)
 - Conversational skill gap analysis (replacing automated flow)
 - Exercise history / retrieval from past exercises
 - ReAct agent with tool selection (current approach is a fixed chain)
