@@ -45,6 +45,39 @@ def parse_brainstorming_done(text):
     return text, None
 
 
+def _extract_json(text):
+    """Extract a JSON object from LLM output, handling code fences and surrounding text."""
+    import re
+    # Strip markdown code fences
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if fenced:
+        try:
+            return json.loads(fenced.group(1))
+        except json.JSONDecodeError:
+            pass
+    # Try direct parse
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    # Brace-counting: find first { and its matching }
+    start = text.find("{")
+    if start == -1:
+        return {}
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start:i + 1])
+                except json.JSONDecodeError:
+                    return {}
+    return {}
+
+
 def get_exercise_phase():
     phase = st.session_state.get("exercise_phase")
     if phase:
@@ -122,11 +155,13 @@ def render_brainstorming():
                         mode="brainstorming",
                     )
                 if reply:
-                    _, exercise_topic = parse_brainstorming_done(reply)
+                    display_text, exercise_topic = parse_brainstorming_done(reply)
+                    st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
                     if exercise_topic:
                         st.session_state["exercise_topic"] = exercise_topic
                         st.session_state["exercise_phase"] = "loading"
                         st.rerun()
+                st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -258,10 +293,7 @@ def render_exercising():
                     exercise_context=exercise_context,
                 )
                 if perf_reply:
-                    try:
-                        perf_data = json.loads(perf_reply)
-                    except json.JSONDecodeError:
-                        perf_data = {}
+                    perf_data = _extract_json(perf_reply)
                     if perf_data:
                         session_info = {
                             "type": "exercise",
