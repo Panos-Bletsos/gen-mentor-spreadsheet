@@ -22,6 +22,7 @@ API_NAMES = {
     "integrate_learning_document": "integrate-learning-document",
     "generate_document_quizzes": "generate-document-quizzes",
     "generate_synthetic_sheet_data": "generate-synthetic-sheet-data",
+    "start_exercise": "start-exercise",
 }
 
 
@@ -242,3 +243,31 @@ def generate_synthetic_sheet_data(
         "model_name": model_name,
     }
     return make_post_request(API_NAMES["generate_synthetic_sheet_data"], data)
+
+
+def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_type=None):
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    data = {
+        "topic": topic,
+        "learner_profile": str(learner_profile),
+        "brainstorming_history": brainstorming_history or [],
+        "model_provider": model_provider,
+        "model_name": model_name,
+    }
+    return make_post_request(API_NAMES["start_exercise"], data, timeout=120)
+
+
+def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    data = {
+        "messages": str(chat_messages),
+        "learner_profile": str(learner_profile),
+        "mode": mode,
+        "exercise_context": exercise_context,
+        "model_provider": model_provider,
+        "model_name": model_name,
+    }
+    response = make_post_request(API_NAMES["chat_with_tutor"], data)
+    return response.get("response") if response else None
