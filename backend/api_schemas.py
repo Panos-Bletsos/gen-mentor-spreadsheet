@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional
 from fastapi import File, UploadFile, Form
 
 
@@ -14,6 +14,8 @@ class ChatWithAutorRequest(BaseRequest):
 
     messages: str
     learner_profile: str = ""
+    mode: str = "general"
+    exercise_context: Optional[dict] = None
 
 
 class LearningGoalRefinementRequest(BaseRequest):
@@ -178,3 +180,9 @@ class SyntheticSheetDataGenerationRequest(BaseRequest):
     row_count: int = 20
     columns: Optional[list[str]] = None
     constraints: str = ""
+
+
+class StartExerciseRequest(BaseRequest):
+    topic: Any  # str or dict (ExerciseTopic)
+    learner_profile: Any = ""
+    brainstorming_history: list = []

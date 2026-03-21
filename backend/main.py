@@ -16,6 +16,7 @@ from modules.adaptive_learner_modeling import *
 from modules.personalized_resource_delivery import *
 from modules.ai_chatbot_tutor import chat_with_tutor_with_llm
 from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
+from modules.exercise_generator import start_exercise_with_llm
 from api_schemas import *
 from config import load_config
 
@@ -67,8 +68,24 @@ async def chat_with_autor(request: ChatWithAutorRequest):
             learner_profile,
             search_rag_manager=search_rag_manager,
             use_search=True,
+            mode=request.mode,
+            exercise_context=request.exercise_context,
         )
         return {"response": response}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+@app.post("/start-exercise")
+async def start_exercise(request: StartExerciseRequest):
+    llm = get_llm(request.model_provider, request.model_name)
+    try:
+        result = start_exercise_with_llm(
+            llm,
+            topic=request.topic,
+            learner_profile=request.learner_profile,
+            brainstorming_history=request.brainstorming_history,
+        )
+        return result
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
