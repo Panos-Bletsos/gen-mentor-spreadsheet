@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from typing import Any, List, Mapping, Optional, Sequence
 
 from pydantic import BaseModel, field_validator
@@ -10,6 +11,8 @@ from base.search_rag import SearchRagManager, format_docs
 from modules.ai_chatbot_tutor.prompts.ai_chatbot_tutor import (
 	ai_tutor_chatbot_system_prompt,
 	ai_tutor_chatbot_task_prompt,
+	ai_tutor_brainstorming_task_prompt,
+	ai_tutor_exercise_task_prompt,
 )
 
 
@@ -59,6 +62,8 @@ class TutorChatPayload(BaseModel):
 	use_search: bool = True
 	top_k: int = 5
 	external_resources: Optional[str] = None
+	mode: str = "general"  # "general", "brainstorming", or "exercise"
+	exercise_context: Optional[dict] = None  # {"plan": {...}, "sheet_snapshot": {...}}
 
 	@field_validator("learner_profile")
 	@classmethod
@@ -100,12 +105,34 @@ class AITutorChatbot(BaseAgent):
 			except Exception:
 				pass
 
-		input_vars = {
-			"learner_profile": data.get("learner_profile", ""),
-			"messages": history_text,
-			"external_resources": external_context,
-		}
-		raw_reply = self.invoke(input_vars, task_prompt=ai_tutor_chatbot_task_prompt)
+		# Select task prompt based on mode
+		mode = data.get("mode", "general")
+		exercise_ctx = data.get("exercise_context") or {}
+
+		if mode == "brainstorming":
+			task_prompt = ai_tutor_brainstorming_task_prompt
+			input_vars = {
+				"learner_profile": data.get("learner_profile", ""),
+				"messages": history_text,
+			}
+		elif mode == "exercise":
+			task_prompt = ai_tutor_exercise_task_prompt
+			input_vars = {
+				"learner_profile": data.get("learner_profile", ""),
+				"messages": history_text,
+				"external_resources": external_context,
+				"exercise_plan": json.dumps(exercise_ctx.get("plan", {})),
+				"sheet_snapshot": json.dumps(exercise_ctx.get("sheet_snapshot", {})),
+			}
+		else:
+			task_prompt = ai_tutor_chatbot_task_prompt
+			input_vars = {
+				"learner_profile": data.get("learner_profile", ""),
+				"messages": history_text,
+				"external_resources": external_context,
+			}
+
+		raw_reply = self.invoke(input_vars, task_prompt=task_prompt)
 		return raw_reply
 
 
@@ -117,6 +144,8 @@ def chat_with_tutor_with_llm(
 	search_rag_manager: Optional[SearchRagManager] = None,
 	use_search: bool = True,
 	top_k: int = 5,
+	mode: str = "general",
+	exercise_context: Optional[dict] = None,
 ):
 	"""Convenience helper to run an AI tutor chat turn with optional RAG.
 
@@ -130,5 +159,7 @@ def chat_with_tutor_with_llm(
 		"messages": messages,
 		"use_search": use_search,
 		"top_k": top_k,
+		"mode": mode,
+		"exercise_context": exercise_context,
 	}
 	return agent.chat(payload)
