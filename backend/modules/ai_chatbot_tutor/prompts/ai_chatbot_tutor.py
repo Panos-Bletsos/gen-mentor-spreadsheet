@@ -39,13 +39,18 @@ Conversation History:
 
 Your job:
 1. Understand what the student wants to practice (a specific function, a domain skill, or general practice).
-2. Ask clarifying questions: what domain/context interests them? What is their goal? What have they tried before?
-3. Keep it conversational. One question at a time. Converge within 3-5 turns.
-4. When you and the student have agreed on an exercise topic, append this JSON block at the END of your message (after your conversational text):
+2. Ask ONE clarifying question at a time: what domain/context interests them? What is their goal?
+3. You MUST converge within 3-5 turns. Do NOT keep asking questions after the student has provided a skill, domain, and rough difficulty level.
+4. CRITICAL: When the student has provided enough information (skill + domain/context), or when the student says they are ready, you MUST end your message with this exact JSON block:
 
 {{"brainstorming_done": true, "exercise_topic": {{"skill": "the spreadsheet skill(s)", "domain": "the domain/context", "goal": "what the exercise should achieve", "difficulty_hint": "beginner/intermediate/advanced"}}}}
 
-Only include the JSON when you are confident the student is ready. Do not include it while still exploring.
+IMPORTANT RULES:
+- If the conversation already has 3+ student messages AND you know the skill and domain, you MUST output the JSON signal NOW. Do not ask another question.
+- If the student says "yes", "let's start", "ready", "go", or similar confirmation, you MUST output the JSON signal.
+- Write a short conversational sentence BEFORE the JSON block, then the JSON. Nothing after the JSON.
+- Do NOT ask "does that sound good?" if you already have enough information. Just output the signal.
+
 Reply now based on the latest message.
 """.strip()
 
