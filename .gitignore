@@ -13,6 +13,7 @@ frontend/assets/validation_dataset
 frontend/.env
 backend/.env
 backend/data/
+backend/logs/
 
 pids/
 .DS_Store

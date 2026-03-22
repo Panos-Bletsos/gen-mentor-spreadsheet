@@ -1,11 +1,13 @@
 import ast
 import json
+import logging
 import time
 import uvicorn
+from fastapi.responses import Response as RawResponse
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Request
 from base.llm_factory import LLMFactory
 from base.searcher_factory import SearchRunner
 from base.search_rag import SearchRagManager
@@ -19,8 +21,13 @@ from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
 from modules.exercise_generator import start_exercise_with_llm
 from api_schemas import *
 from config import load_config
+from logging_config import setup_logging
 
 app_config = load_config(config_name="main")
+setup_logging(level=str(app_config.get("log_level", "INFO")))
+logger = logging.getLogger(__name__)
+http_logger = logging.getLogger("http")
+
 search_rag_manager = SearchRagManager.from_config(app_config)
 
 app = FastAPI()
@@ -31,6 +38,51 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    method = request.method
+    path = request.url.path
+
+    # Read and log request body (Starlette caches the bytes so downstream handlers can still read it)
+    body_bytes = await request.body()
+    try:
+        req_body_str = json.dumps(json.loads(body_bytes), ensure_ascii=False, indent=2) if body_bytes else "{}"
+    except Exception:
+        req_body_str = body_bytes.decode("utf-8", errors="replace")
+
+    logger.info("REQUEST  %s %s started", method, path)
+    http_logger.info(">>> %s %s\n%s", method, path, req_body_str)
+
+    start = time.time()
+    try:
+        response = await call_next(request)
+        duration = time.time() - start
+
+        # Buffer response body so we can log it, then re-wrap to send to client
+        resp_chunks = []
+        async for chunk in response.body_iterator:
+            resp_chunks.append(chunk)
+        resp_bytes = b"".join(resp_chunks)
+        try:
+            resp_body_str = json.dumps(json.loads(resp_bytes), ensure_ascii=False, indent=2)
+        except Exception:
+            resp_body_str = resp_bytes.decode("utf-8", errors="replace")
+
+        logger.info("REQUEST  %s %s completed (%.1fs) %s", method, path, duration, response.status_code)
+        http_logger.info("<<< %s %s [%s] (%.1fs)\n%s", method, path, response.status_code, duration, resp_body_str)
+
+        return RawResponse(
+            content=resp_bytes,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+    except Exception as e:
+        duration = time.time() - start
+        logger.error("REQUEST  %s %s failed (%.1fs): %s", method, path, duration, e)
+        http_logger.error("!!! %s %s failed (%.1fs): %s", method, path, duration, e)
+        raise
 
 def get_llm(model_provider: str | None = None, model_name: str | None = None, **kwargs):
     model_provider = model_provider or app_config.llm.provider
