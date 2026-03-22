@@ -53,7 +53,7 @@ def load_persistent_state():
     except Exception:
         return False
     for k, v in data.items():
-        if k in PERSIST_KEYS:
+        if k in PERSIST_KEYS and k not in st.session_state:
             st.session_state[k] = v
     return True
 
@@ -85,7 +85,7 @@ def initialize_session_state():
         st.session_state["backend_endpoint"] = config.backend_endpoint
 
     if "available_models" not in st.session_state:
-        st.session_state["available_models"] = ["OpenAI/GPT-4o"]
+        st.session_state["available_models"] = ["openai/gpt-4.1-nano"]
 
     if "llm_type" not in st.session_state:
         if len(st.session_state["available_models"]) > 0:

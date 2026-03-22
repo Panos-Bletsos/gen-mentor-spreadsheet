@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from base import BaseAgent
+
+logger = logging.getLogger(__name__)
 from modules.data_generator.prompts.data_generator import (
     synthetic_data_generator_system_prompt,
     synthetic_data_generator_task_prompt,
@@ -66,6 +69,8 @@ class SyntheticDataGenerator(BaseAgent):
         if not isinstance(payload, SyntheticDataGeneratorPayload):
             payload = SyntheticDataGeneratorPayload.model_validate(payload)
 
+        logger.info("DATAGEN  generating %d rows, columns=%s", payload.row_count, payload.columns)
+
         raw_output = self.invoke(
             payload.model_dump(),
             task_prompt=synthetic_data_generator_task_prompt,
@@ -73,6 +78,7 @@ class SyntheticDataGenerator(BaseAgent):
         validated_output = SyntheticSpreadsheetData.model_validate(raw_output)
 
         if len(validated_output.rows) != payload.row_count:
+            logger.warning("DATAGEN  row count mismatch: expected %d, got %d", payload.row_count, len(validated_output.rows))
             raise ValueError(
                 f"Expected {payload.row_count} rows, got {len(validated_output.rows)}."
             )
@@ -80,10 +86,12 @@ class SyntheticDataGenerator(BaseAgent):
         if payload.columns:
             expected_headers = [col.strip() for col in payload.columns if col and col.strip()]
             if validated_output.headers != expected_headers:
+                logger.warning("DATAGEN  header mismatch: expected %s, got %s", expected_headers, validated_output.headers)
                 raise ValueError(
                     "Model output headers do not match user-provided columns."
                 )
 
+        logger.info("DATAGEN  validation passed (%d rows, %d columns)", len(validated_output.rows), len(validated_output.headers))
         return validated_output.model_dump()
 
 

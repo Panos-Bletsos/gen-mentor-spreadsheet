@@ -7,11 +7,10 @@ window.addEventListener('message', function(event) {
     if (event.data === 'get_sheet_data') {
         try {
             var app = document.getElementById('app');
-            if (!app || !window.__univerInstance) {
+            if (!app || !univerAPI) {
                 window.parent.postMessage({type: 'sheet_data', data: null}, '*');
                 return;
             }
-            var univerAPI = window.__univerInstance;
             var workbook = univerAPI.getActiveWorkbook();
             if (!workbook) {
                 window.parent.postMessage({type: 'sheet_data', data: null}, '*');

@@ -1,9 +1,13 @@
+import logging
+import time
 from typing import Any, Dict, Optional, Sequence
 
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
 
 from utils.llm_output import preprocess_response
+
+logger = logging.getLogger(__name__)
 from langgraph.typing import InputT, OutputT, StateT
 from langchain.agents.middleware.types import (
     AgentMiddleware,
@@ -79,9 +83,19 @@ class BaseAgent:
 
     def invoke(self, input_dict: dict, task_prompt: Optional[str] = None) -> Any:
         """Invoke the agent with the given input text."""
-        input_prompt = self._build_prompt(input_dict, task_prompt=task_prompt)
-        raw_output = self._agent.invoke(input_prompt)
-        output = preprocess_response(
-            raw_output, only_text=True, exclude_think=self.exclude_think, json_output=self.jsonalize_output
-        )
-        return output
+        agent_name = self.__class__.__name__
+        logger.info("AGENT    %s.invoke starting", agent_name)
+        start = time.time()
+        try:
+            input_prompt = self._build_prompt(input_dict, task_prompt=task_prompt)
+            raw_output = self._agent.invoke(input_prompt)
+            output = preprocess_response(
+                raw_output, only_text=True, exclude_think=self.exclude_think, json_output=self.jsonalize_output
+            )
+            duration = time.time() - start
+            logger.info("AGENT    %s.invoke completed (%.1fs)", agent_name, duration)
+            return output
+        except Exception as e:
+            duration = time.time() - start
+            logger.error("AGENT    %s.invoke failed (%.1fs): %s", agent_name, duration, e)
+            raise

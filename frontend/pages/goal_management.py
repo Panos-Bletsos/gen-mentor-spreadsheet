@@ -3,8 +3,10 @@ import streamlit as st
 from components.goal_refinement import render_goal_refinement
 from utils.request_api import create_learner_profile, identify_skill_gap
 from components.gap_identification import render_identified_skill_gap, render_identifying_skill_gap
-from utils.state import add_new_goal, change_selected_goal_id, index_goal_by_id, reset_to_add_goal, save_persistent_state
+from utils.state import add_new_goal, change_selected_goal_id, index_goal_by_id, initialize_session_state, reset_to_add_goal, save_persistent_state
 from components.skill_info import render_skill_info
+
+initialize_session_state()
 
 
 def render_goal_management():

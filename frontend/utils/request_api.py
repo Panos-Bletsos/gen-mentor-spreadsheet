@@ -232,7 +232,7 @@ def generate_synthetic_sheet_data(
     constraints="",
     llm_type=None,
 ):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
     model_provider, model_name = parse_llm_settings(resolved_llm_type)
     data = {
         "user_request": str(user_request),
@@ -246,7 +246,7 @@ def generate_synthetic_sheet_data(
 
 
 def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_type=None):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
     model_provider, model_name = parse_llm_settings(resolved_llm_type)
     data = {
         "topic": topic,
@@ -255,11 +255,11 @@ def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_ty
         "model_provider": model_provider,
         "model_name": model_name,
     }
-    return make_post_request(API_NAMES["start_exercise"], data, timeout=120)
+    return make_post_request(API_NAMES["start_exercise"], data, timeout=180)
 
 
 def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4o")
+    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
     model_provider, model_name = parse_llm_settings(resolved_llm_type)
     data = {
         "messages": str(chat_messages),

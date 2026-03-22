@@ -6,7 +6,7 @@ from fastapi import File, UploadFile, Form
 
 class BaseRequest(BaseModel):
     model_provider: str = "openai"
-    model_name: str = "gpt-4o"
+    model_name: str = "gpt-5.4-nano"
     method_name: str = "genmentor"
 
 

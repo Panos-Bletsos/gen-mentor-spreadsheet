@@ -3,8 +3,12 @@ import time
 import streamlit as st
 import streamlit.components.v1 as components
 from assets.js.univer_sheets import get_univer_sheets_html
-from utils.sheet_data_parser import build_univer_workbook_from_payload
+from streamlit_js_eval import streamlit_js_eval
+from utils.sheet_data_parser import build_univer_workbook_from_payload, extract_cell_values
 from utils.request_api import start_exercise, chat_with_tutor_exercise, update_learner_profile
+from utils.state import initialize_session_state
+
+initialize_session_state()
 
 st.markdown(
     "<style>" + open("./assets/css/main.css").read() + "</style>",
@@ -75,6 +79,42 @@ def _extract_json(text):
                     return json.loads(text[start:i + 1])
                 except json.JSONDecodeError:
                     return {}
+    return {}
+
+
+def _capture_sheet_snapshot():
+    """Reach into the Univer iframe and grab the current workbook snapshot.
+
+    Returns a dict suitable for passing as sheet_snapshot to the tutor,
+    or {} if the snapshot cannot be captured.
+    """
+    js_code = """
+    (function() {
+        var iframes = window.parent.document.querySelectorAll('iframe');
+        for (var i = 0; i < iframes.length; i++) {
+            try {
+                var win = iframes[i].contentWindow;
+                if (win && typeof win.getWorkbookSnapshot === 'function') {
+                    var snapshot = win.getWorkbookSnapshot();
+                    if (snapshot) return JSON.stringify(snapshot);
+                }
+            } catch(e) {}
+        }
+        return null;
+    })()
+    """
+    try:
+        raw = streamlit_js_eval(
+            js_expressions=js_code,
+            key=f"sheet_snapshot_m{len(st.session_state.get('exercise_messages', []))}",
+        )
+        if raw and isinstance(raw, str):
+            snapshot = json.loads(raw)
+            cell_values = extract_cell_values(snapshot)
+            if cell_values:
+                return {"cell_values": cell_values, "raw_snapshot": snapshot}
+    except Exception:
+        pass
     return {}
 
 
@@ -226,6 +266,12 @@ def render_exercising():
         else:
             st.warning("No spreadsheet data available.")
 
+    # Capture the sheet snapshot on every render (outside chat input block)
+    # so streamlit_js_eval doesn't trigger a rerun inside the conditional.
+    sheet_snapshot = _capture_sheet_snapshot()
+    if sheet_snapshot:
+        st.session_state["_last_sheet_snapshot"] = sheet_snapshot
+
     with right_col:
         st.subheader("AI Tutor")
 
@@ -239,7 +285,7 @@ def render_exercising():
 
             exercise_context = {
                 "plan": plan,
-                "sheet_snapshot": {},  # Populated by postMessage bridge when available
+                "sheet_snapshot": st.session_state.get("_last_sheet_snapshot", {}),
             }
 
             with st.spinner("Thinking..."):
@@ -270,7 +316,7 @@ def render_exercising():
             with st.spinner("Generating feedback..."):
                 exercise_context = {
                     "plan": plan,
-                    "sheet_snapshot": {},
+                    "sheet_snapshot": st.session_state.get("_last_sheet_snapshot", {}),
                 }
                 reply = chat_with_tutor_exercise(
                     st.session_state["exercise_messages"],

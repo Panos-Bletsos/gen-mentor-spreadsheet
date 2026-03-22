@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import ast
 import json
+import logging
 from typing import Any, List, Mapping, Optional, Sequence
 
 from pydantic import BaseModel, field_validator
 
 from base import BaseAgent
 from base.search_rag import SearchRagManager, format_docs
+
+logger = logging.getLogger(__name__)
 from modules.ai_chatbot_tutor.prompts.ai_chatbot_tutor import (
 	ai_tutor_chatbot_system_prompt,
 	ai_tutor_chatbot_task_prompt,
@@ -88,25 +91,31 @@ class AITutorChatbot(BaseAgent):
 
 		data = payload.model_dump()
 		messages = data.get("messages")
+		msg_count = len(messages) if isinstance(messages, list) else 0
 		history_text = _stringify_history(messages)
 		query = _last_user_query(messages)
+		mode = data.get("mode", "general")
+
+		logger.info("TUTOR    chat starting (mode=%s, messages=%d, use_search=%s)", mode, msg_count, data.get("use_search", True))
 
 		external_context = data.get("external_resources") or ""
 		if self.search_rag_manager is not None and query:
 			try:
 				if data.get("use_search", True):
+					logger.info("TUTOR    RAG web search + retrieval for query: %.80s", query)
 					docs = self.search_rag_manager.invoke(query)
 				else:
-					# Vectorstore-only retrieval
+					logger.info("TUTOR    RAG vectorstore retrieval for query: %.80s", query)
 					docs = self.search_rag_manager.retrieve(query, k=max(1, int(data.get("top_k", 5))))
+				doc_count = len(docs) if docs else 0
+				logger.info("TUTOR    RAG returned %d documents", doc_count)
 				context = format_docs(docs)
 				if context:
 					external_context = f"{external_context}\n{context}" if external_context else context
-			except Exception:
-				pass
+			except Exception as e:
+				logger.warning("TUTOR    RAG failed, continuing without external context: %s", e)
 
 		# Select task prompt based on mode
-		mode = data.get("mode", "general")
 		exercise_ctx = data.get("exercise_context") or {}
 
 		if mode == "brainstorming":

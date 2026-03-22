@@ -8,7 +8,7 @@ from typing import Optional
 class LLMConfig:
     """Configuration for the LLM provider. See LangChain documentation for details."""
     provider: str = "openai"  # e.g., openai, azure-openai, ollama, anthropic, groq
-    model_name: str = "gpt-4o"
+    model_name: str = "gpt-5.4-nano"
     base_url: Optional[str] = None
 
 

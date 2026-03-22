@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any, Optional
 
 from base import BaseAgent
@@ -107,6 +108,8 @@ def start_exercise_with_llm(
 
     Returns dict with keys: exercise_plan, spreadsheet_data, tutor_message.
     """
+    chain_start = time.time()
+    logger.info("EXERCISE [Step 1/4] Planning exercise for topic: %.80s", _topic_to_str(topic))
     # --- Step 1: Plan Exercise ---
     planner = ExercisePlanner(llm)
     brainstorming_context = ""
@@ -126,7 +129,10 @@ def start_exercise_with_llm(
         plan_raw = json.loads(plan_raw)
     exercise_plan = ExercisePlan.model_validate(plan_raw)
 
+    logger.info("EXERCISE plan created: difficulty=%s, sheets=%d, rows=%d", exercise_plan.difficulty, len(exercise_plan.sheets), exercise_plan.row_count)
+
     # --- Step 2 & 3: Generate Data + Judge Quality (with retry loop) ---
+    logger.info("EXERCISE [Step 2/4] Generating data + quality judging")
     all_sheets_data = []
     judge = QualityJudge(llm)
 
@@ -138,6 +144,7 @@ def start_exercise_with_llm(
             all_sheets_data.append({"name": sheet_dict["name"], "headers": sheet_dict.get("columns", []), "rows": []})
             continue
 
+        logger.info("EXERCISE generating data for sheet '%s'", sheet_dict["name"])
         retry_reason = ""
         sheet_data = None
         for attempt in range(1 + MAX_JUDGE_RETRIES):
@@ -163,9 +170,10 @@ def start_exercise_with_llm(
             judge_result = JudgeQualityResult.model_validate(judge_raw)
 
             if judge_result.passed:
+                logger.info("EXERCISE quality judge PASSED for sheet '%s' (attempt %d)", sheet_dict["name"], attempt + 1)
                 break
             retry_reason = judge_result.reason
-            logger.warning(f"Quality judge rejected data (attempt {attempt + 1}): {retry_reason}")
+            logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
 
         # Add student_fills columns as empty
         student_cols = sheet_dict.get("student_fills", [])
@@ -183,6 +191,8 @@ def start_exercise_with_llm(
     spreadsheet_data = {"sheets": all_sheets_data}
 
     # --- Step 4: Generate Opening Message ---
+    logger.info("EXERCISE [Step 3/4] Data generation complete for %d sheets", len(all_sheets_data))
+    logger.info("EXERCISE [Step 4/4] Generating opening message")
     msg_gen = OpeningMessageGenerator(llm)
     sheet_names = [s["name"] for s in all_sheets_data]
     columns_summary = "; ".join(
@@ -196,6 +206,7 @@ def start_exercise_with_llm(
     }
     tutor_message = msg_gen.invoke(msg_input, task_prompt=opening_message_task_prompt)
 
+    logger.info("EXERCISE chain complete (%.1fs)", time.time() - chain_start)
     return {
         "exercise_plan": exercise_plan.model_dump(),
         "spreadsheet_data": spreadsheet_data,
