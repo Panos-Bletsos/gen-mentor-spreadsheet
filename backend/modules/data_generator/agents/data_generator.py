@@ -106,3 +106,52 @@ def generate_synthetic_spreadsheet_data_with_llm(
         "constraints": constraints,
     }
     return generator.generate(payload)
+
+
+def generate_with_tracing(
+    llm: Any,
+    user_request: str,
+    *,
+    row_count: int = 20,
+    columns: list[str] | None = None,
+    constraints: str = "",
+    recorder: Any = None,
+) -> dict:
+    """Like generate_synthetic_spreadsheet_data_with_llm but populates a SpanRecorder
+    with the raw AIMessage (including token usage) via include_raw=True."""
+    payload = SyntheticDataGeneratorPayload.model_validate({
+        "user_request": user_request,
+        "row_count": row_count,
+        "columns": columns,
+        "constraints": constraints,
+    })
+    generator = SyntheticDataGenerator(llm)
+    logger.info("DATAGEN  generating %d rows, columns=%s (traced)", payload.row_count, payload.columns)
+
+    messages = generator._build_messages(payload.model_dump(), task_prompt=synthetic_data_generator_task_prompt)
+    if recorder is not None:
+        recorder.set_input(messages)
+
+    structured = generator._model.with_structured_output(SyntheticSpreadsheetData, include_raw=True)
+    raw_result = structured.invoke(messages)
+    ai_message = raw_result["raw"]
+    validated_output: SyntheticSpreadsheetData = raw_result["parsed"]
+
+    if recorder is not None:
+        recorder.set_response(ai_message)
+
+    if len(validated_output.rows) != payload.row_count:
+        logger.warning("DATAGEN  row count mismatch: expected %d, got %d", payload.row_count, len(validated_output.rows))
+        raise ValueError(f"Expected {payload.row_count} rows, got {len(validated_output.rows)}.")
+
+    if payload.columns:
+        expected_headers = [col.strip() for col in payload.columns if col and col.strip()]
+        if validated_output.headers != expected_headers:
+            logger.warning("DATAGEN  header mismatch: expected %s, got %s", expected_headers, validated_output.headers)
+            raise ValueError("Model output headers do not match user-provided columns.")
+
+    logger.info("DATAGEN  validation passed (%d rows, %d columns)", len(validated_output.rows), len(validated_output.headers))
+    result = validated_output.model_dump()
+    if recorder is not None:
+        recorder.set_parsed(validated_output)
+    return result

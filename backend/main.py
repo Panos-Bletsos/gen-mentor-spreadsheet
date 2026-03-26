@@ -20,6 +20,7 @@ from modules.skill_gap_identification import *
 from modules.adaptive_learner_modeling import *
 from modules.personalized_resource_delivery import *
 from modules.ai_chatbot_tutor import chat_with_tutor_with_llm
+from utils.tracing import TraceSession
 from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
 from modules.exercise_generator import start_exercise_with_llm
 from api_schemas import *
@@ -92,6 +93,10 @@ def get_llm(model_provider: str | None = None, model_name: str | None = None, **
     model_name = model_name or app_config.llm.model_name
     if "base_url" not in kwargs and getattr(app_config.llm, "base_url", None):
         kwargs["base_url"] = app_config.llm.base_url
+    reasoning_effort = getattr(app_config.llm, "reasoning_effort", None)
+    if reasoning_effort and reasoning_effort != "none":
+        kwargs.setdefault("reasoning_effort", reasoning_effort)
+        kwargs.pop("temperature", None)
     return LLMFactory.create(model=model_name, model_provider=model_provider, **kwargs)
 
 UPLOAD_LOCATION = "/mnt/datadrive/tfwang/code/llm-mentor/data/cv/"
@@ -117,15 +122,28 @@ async def chat_with_autor(request: ChatWithAutorRequest):
             converted_messages = ast.literal_eval(request.messages)
         else:
             return JSONResponse(status_code=400, content={"detail": "messages must be a JSON array string"})
-        result = chat_with_tutor_with_llm(
-            llm,
-            converted_messages,
-            learner_profile,
-            search_rag_manager=search_rag_manager,
-            use_search=request.mode != "brainstorming",
-            mode=request.mode,
-            exercise_context=request.exercise_context,
-        )
+        if request.mode in ("brainstorming", "exercise"):
+            with TraceSession(f"{request.mode}_chat") as trace_session:
+                result = chat_with_tutor_with_llm(
+                    llm,
+                    converted_messages,
+                    learner_profile,
+                    search_rag_manager=search_rag_manager,
+                    use_search=request.mode != "brainstorming",
+                    mode=request.mode,
+                    exercise_context=request.exercise_context,
+                    trace_session=trace_session,
+                )
+        else:
+            result = chat_with_tutor_with_llm(
+                llm,
+                converted_messages,
+                learner_profile,
+                search_rag_manager=search_rag_manager,
+                use_search=True,
+                mode=request.mode,
+                exercise_context=request.exercise_context,
+            )
         # result is {"response": str, "tool_calls": list[dict]}
         return result
     except Exception as e:

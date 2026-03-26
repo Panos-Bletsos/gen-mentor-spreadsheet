@@ -76,12 +76,18 @@ class LLMFactory:
             LLMFactory instance initialized from config
         """
         config = ensure_config_dict(config)
+        reasoning_effort = config.get("reasoning_effort", None)
+        extra = {}
+        if reasoning_effort and reasoning_effort != "none":
+            extra["reasoning_effort"] = reasoning_effort
+        else:
+            extra["temperature"] = 0
         return init_chat_model(
             model=config.get("model_name", "gpt-4.1-nano"),
             model_provider=config.get("model_provider", "openai"),
             base_url=config.get("base_url", None),
             # api_key=config.api_key,
-            temperature=0,  # Always 0 for deterministic results
+            **extra,
         )
     
 

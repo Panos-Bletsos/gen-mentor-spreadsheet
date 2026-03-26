@@ -10,6 +10,7 @@ from pydantic import BaseModel, field_validator
 from base import BaseAgent
 from base.search_rag import SearchRagManager, format_docs
 from modules.ai_chatbot_tutor.tools import BrainstormingDone, SheetUpdate
+from utils.tracing import TraceSession
 
 logger = logging.getLogger(__name__)
 from modules.ai_chatbot_tutor.prompts.ai_chatbot_tutor import (
@@ -86,7 +87,7 @@ class AITutorChatbot(BaseAgent):
 		super().__init__(model=model, system_prompt=ai_tutor_chatbot_system_prompt, jsonalize_output=False)
 		self.search_rag_manager = search_rag_manager
 
-	def chat(self, payload: TutorChatPayload | Mapping[str, Any] | str):
+	def chat(self, payload: TutorChatPayload | Mapping[str, Any] | str, trace_session: Optional[TraceSession] = None):
 		if not isinstance(payload, TutorChatPayload):
 			payload = TutorChatPayload.model_validate(payload)
 
@@ -155,7 +156,15 @@ class AITutorChatbot(BaseAgent):
 		else:  # exercise
 			model_with_tools = self._model.bind_tools([SheetUpdate])
 
-		ai_response = model_with_tools.invoke(lang_messages)
+		if trace_session is not None:
+			with trace_session.span("AITutorChatbot", f"chat_{mode}") as rec:
+				rec.set_input(lang_messages)
+				ai_response = model_with_tools.invoke(lang_messages)
+				rec.set_response(ai_response)
+				tool_names = [tc["name"] for tc in (ai_response.tool_calls or [])]
+				rec.set_parsed({"content_preview": (ai_response.content or "")[:200], "tool_calls": tool_names})
+		else:
+			ai_response = model_with_tools.invoke(lang_messages)
 
 		# Extract conversational text + any tool calls
 		result = {"response": ai_response.content or "", "tool_calls": []}
@@ -178,6 +187,7 @@ def chat_with_tutor_with_llm(
 	top_k: int = 5,
 	mode: str = "general",
 	exercise_context: Optional[dict] = None,
+	trace_session: Optional[TraceSession] = None,
 ):
 	"""Convenience helper to run an AI tutor chat turn with optional RAG.
 
@@ -194,4 +204,4 @@ def chat_with_tutor_with_llm(
 		"mode": mode,
 		"exercise_context": exercise_context,
 	}
-	return agent.chat(payload)
+	return agent.chat(payload, trace_session=trace_session)
