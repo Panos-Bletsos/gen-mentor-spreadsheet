@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from base import BaseAgent
+from base import BaseStructuredAgent
 
 logger = logging.getLogger(__name__)
 from modules.data_generator.prompts.data_generator import (
@@ -34,7 +34,7 @@ class SyntheticDataGeneratorPayload(BaseModel):
 
 class SyntheticSpreadsheetData(BaseModel):
     headers: list[str] = Field(..., min_length=1)
-    rows: list[list[Any]] = Field(default_factory=list)
+    rows: list[list[str]] = Field(default_factory=list)
 
     @field_validator("headers")
     @classmethod
@@ -55,15 +55,11 @@ class SyntheticSpreadsheetData(BaseModel):
         return self
 
 
-class SyntheticDataGenerator(BaseAgent):
-    name: str = "SyntheticDataGenerator"
+class SyntheticDataGenerator(BaseStructuredAgent):
+    output_schema = SyntheticSpreadsheetData
 
     def __init__(self, model: Any):
-        super().__init__(
-            model=model,
-            system_prompt=synthetic_data_generator_system_prompt,
-            jsonalize_output=True,
-        )
+        super().__init__(model=model, system_prompt=synthetic_data_generator_system_prompt)
 
     def generate(self, payload: SyntheticDataGeneratorPayload | Mapping[str, Any] | str):
         if not isinstance(payload, SyntheticDataGeneratorPayload):
@@ -71,11 +67,10 @@ class SyntheticDataGenerator(BaseAgent):
 
         logger.info("DATAGEN  generating %d rows, columns=%s", payload.row_count, payload.columns)
 
-        raw_output = self.invoke(
+        validated_output = self.invoke(
             payload.model_dump(),
             task_prompt=synthetic_data_generator_task_prompt,
         )
-        validated_output = SyntheticSpreadsheetData.model_validate(raw_output)
 
         if len(validated_output.rows) != payload.row_count:
             logger.warning("DATAGEN  row count mismatch: expected %d, got %d", payload.row_count, len(validated_output.rows))

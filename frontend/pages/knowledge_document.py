@@ -192,7 +192,6 @@ def render_content_preparation(goal):
             goal["learner_profile"],
             goal["learning_path"],
             learning_session,
-            llm_type="gpt4o"
         )
     if knowledge_points is None:
         st.error("Failed to explore knowledge points.")
@@ -210,7 +209,6 @@ def render_content_preparation(goal):
             knowledge_points,
             use_search=use_search,
             allow_parallel=True,
-            llm_type="gpt4o"
         )
     if knowledge_drafts is None:
         st.error("Failed to draft knowledge points.")
@@ -223,8 +221,7 @@ def render_content_preparation(goal):
             learning_session,
             knowledge_points,
             knowledge_drafts,
-            llm_type="gpt4o",
-            output_markdown=False
+            output_markdown=False,
         )
         learning_document = prepare_markdown_document(document_structure, knowledge_points, knowledge_drafts)
     if learning_document is None:
@@ -240,7 +237,6 @@ def render_content_preparation(goal):
             multiple_choice_count=1,
             true_false_count=1,
             short_answer_count=1,
-            llm_type="gpt4o"
         )
     learning_content["quizzes"] = quizzes
     st.success("Stage 4/4 🎯 Document quizzes generated successfully.")

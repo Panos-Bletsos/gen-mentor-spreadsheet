@@ -1,0 +1,289 @@
+{
+  "backend_endpoint": "http://127.0.0.1:5001/",
+  "available_models": [
+    "openai/gpt-5.4-nano"
+  ],
+  "if_complete_onboarding": true,
+  "sample_number": 2,
+  "logged_in": false,
+  "show_chatbot": true,
+  "llm_type": "openai/gpt-5.4-nano",
+  "tutor_messages": [],
+  "goals": [
+    {
+      "id": 0,
+      "learning_goal": "Build practical skills using spreadsheets to organize, analyze, and present data effectively (e.g., using common functions, sorting/filtering, and basic charts).",
+      "skill_gaps": [
+        {
+          "name": "Spreadsheet data organization (tables, headers, cell referencing)",
+          "is_gap": false,
+          "required_level": "beginner",
+          "current_level": "beginner",
+          "reason": "Software engineer likely understands structured data and cell referencing at basic level.",
+          "level_confidence": "low"
+        },
+        {
+          "name": "Using common spreadsheet functions (SUM, AVERAGE, COUNT, IF, basic text/date operations)",
+          "is_gap": false,
+          "required_level": "beginner",
+          "current_level": "beginner",
+          "reason": "No spreadsheet evidence, but general tech background suggests basic function familiarity.",
+          "level_confidence": "low"
+        },
+        {
+          "name": "Building and debugging formulas with correct references (relative vs absolute)",
+          "is_gap": false,
+          "required_level": "beginner",
+          "current_level": "beginner",
+          "reason": "Profile lacks proof of working with relative/absolute references or formula debugging.",
+          "level_confidence": "medium"
+        },
+        {
+          "name": "Sorting and filtering data to answer questions",
+          "is_gap": false,
+          "required_level": "beginner",
+          "current_level": "beginner",
+          "reason": "No direct experience provided, but basic sorting/filtering is typically accessible to engineers.",
+          "level_confidence": "low"
+        },
+        {
+          "name": "Creating pivot-style summaries using grouping and aggregations (e.g., totals/averages by category)",
+          "is_gap": true,
+          "required_level": "intermediate",
+          "current_level": "unlearned",
+          "reason": "No indication of pivot tables, grouping, or aggregation using spreadsheet tools.",
+          "level_confidence": "medium"
+        },
+        {
+          "name": "Selecting and generating effective basic charts (bar/line/pie/scatter) from filtered/aggregated data",
+          "is_gap": true,
+          "required_level": "intermediate",
+          "current_level": "beginner",
+          "reason": "No evidence of charting from filtered/aggregated datasets or choosing appropriate chart types.",
+          "level_confidence": "medium"
+        },
+        {
+          "name": "Data presentation best practices in spreadsheets (labels, formatting, chart titles/legends, readability)",
+          "is_gap": false,
+          "required_level": "beginner",
+          "current_level": "beginner",
+          "reason": "General professional work implies basic formatting and labeling practices.",
+          "level_confidence": "low"
+        }
+      ],
+      "learner_profile": {
+        "learner_information": "Software Engineer with likely familiarity working with structured/tabular data and basic referencing concepts, but no direct evidence of hands-on spreadsheet workflows (functions, sorting/filtering, pivot-style aggregation, charting). Goal is practical spreadsheet skills to organize, analyze, and present data effectively for common business/engineering use cases.",
+        "learning_goal": "Build practical skills using spreadsheets to organize, analyze, and present data effectively (common functions, sorting/filtering, basic charts). Target competencies include: table organization and cell referencing, common functions, correct relative vs absolute formulas, sorting/filtering, pivot-style summaries (grouping + aggregation), effective basic charts, and presentation best practices (labels/formatting/readability).",
+        "cognitive_status": {
+          "overall_progress": 25,
+          "mastered_skills": [
+            {
+              "name": "Spreadsheet data organization (tables, headers, cell referencing)",
+              "proficiency_level": "beginner"
+            },
+            {
+              "name": "Using common spreadsheet functions (SUM, AVERAGE, COUNT, IF, basic text/date operations)",
+              "proficiency_level": "beginner"
+            },
+            {
+              "name": "Building and debugging formulas with correct references (relative vs absolute)",
+              "proficiency_level": "beginner"
+            },
+            {
+              "name": "Sorting and filtering data to answer questions",
+              "proficiency_level": "beginner"
+            },
+            {
+              "name": "Data presentation best practices in spreadsheets (labels, formatting, chart titles/legends, readability)",
+              "proficiency_level": "beginner"
+            }
+          ],
+          "in_progress_skills": [
+            {
+              "name": "Creating pivot-style summaries using grouping and aggregations (e.g., totals/averages by category)",
+              "required_proficiency_level": "intermediate",
+              "current_proficiency_level": "unlearned"
+            },
+            {
+              "name": "Selecting and generating effective basic charts (bar/line/pie/scatter) from filtered/aggregated data",
+              "required_proficiency_level": "intermediate",
+              "current_proficiency_level": "beginner"
+            }
+          ]
+        },
+        "learning_preferences": {
+          "content_style": "Concise summaries plus short worked examples (example → explain → mini task).",
+          "activity_type": "Actively query and interactive exercises (small spreadsheet tasks with immediate feedback).",
+          "additional_notes": "Use step-by-step demonstrations for pivot/chart workflows because these require procedural accuracy. Provide quick reference cheat-sheets for function syntax and chart selection rules."
+        },
+        "behavioral_patterns": {
+          "system_usage_frequency": "Average of ~3 logins per week (initial baseline).",
+          "session_duration_engagement": "Average ~30 minutes per session; engagement tends to be higher with interactive tasks.",
+          "motivational_triggers": "Motivation messages should be used when login frequency decreases (e.g., last-week drop).",
+          "additional_notes": "Prefer consistent, short practice. Best fit is 2–3 focused sessions per week targeting one procedure at a time (e.g., pivot aggregation first, then charting from that output)."
+        }
+      },
+      "learning_path": [
+        {
+          "id": "Session 1",
+          "title": "Pivot-Style Summaries (Grouping + Aggregation) — From Question to Table",
+          "abstract": "Learn the workflow for pivot-style summaries: define the business question (what to group by, what to aggregate, and what the output should look like), then prepare the source table (clean headers, one category column, one measure column). You’ll practice designing a summary table that computes totals/averages/counts by category, and you’ll debug common issues like inconsistent category values or choosing the wrong aggregation. Includes a quick cheat-sheet for “group by” vs “aggregate” and a mini checklist for validating results.",
+          "if_learned": false,
+          "associated_skills": [
+            "Pivot-style summaries (grouping + aggregation)",
+            "Data organization for analysis"
+          ],
+          "desired_outcome_when_completed": [
+            {
+              "name": "Pivot-style summaries using grouping and aggregations",
+              "level": "intermediate"
+            },
+            {
+              "name": "Table preparation for accurate aggregation",
+              "level": "intermediate"
+            }
+          ]
+        },
+        {
+          "id": "Session 2",
+          "title": "Reference-Accurate Formulas for Summary Tables (Relative vs Absolute)",
+          "abstract": "Build and verify formulas inside summary outputs: compute derived metrics (e.g., percent of total, rate per unit) using correct relative vs absolute references. You’ll practice with 2–3 scenarios: (1) totals by category, (2) aggregations feeding a “share of total” column, and (3) rates that require locking denominators. The session emphasizes procedural accuracy: show the formula, explain each reference, then run a mini task where you predict what changes when you copy/fill down.",
+          "if_learned": false,
+          "associated_skills": [
+            "Correct relative vs absolute formulas",
+            "Using functions in analysis"
+          ],
+          "desired_outcome_when_completed": [
+            {
+              "name": "Correct relative vs absolute formulas in summary contexts",
+              "level": "intermediate"
+            },
+            {
+              "name": "Creating derived metrics from aggregated data",
+              "level": "intermediate"
+            }
+          ]
+        },
+        {
+          "id": "Session 3",
+          "title": "Sorting & Filtering for Focused Analysis (Before You Summarize)",
+          "abstract": "Use sorting and filtering to answer targeted questions before building summaries. You’ll learn to (a) filter to the relevant slice (date ranges, statuses, departments), (b) sort to reveal ranking patterns (top/bottom, highest averages), and (c) ensure the summarized output matches the filtered subset. Includes interactive exercises that require quick sanity checks (row counts, totals consistency) and a short “common mistakes” list (filter not applied, mixed data types, sort breaking alignment).",
+          "if_learned": false,
+          "associated_skills": [
+            "Sorting and filtering",
+            "Validation of analytic outputs"
+          ],
+          "desired_outcome_when_completed": [
+            {
+              "name": "Sorting and filtering data to answer questions",
+              "level": "intermediate"
+            },
+            {
+              "name": "Validating that summaries reflect the intended filtered subset",
+              "level": "intermediate"
+            }
+          ]
+        },
+        {
+          "id": "Session 4",
+          "title": "Charts from Aggregated/Filtered Data (Bar/Line/Pie/Scatter Rules)",
+          "abstract": "Select and generate effective basic charts from your pivot-style summaries. You’ll practice choosing the right chart type based on the data intent: bar for comparisons across categories, line for trends over time, pie for composition (with caveats), scatter for relationships (with axes meaning). You’ll also learn how to correctly set ranges/series so the chart reflects the filtered/aggregated table. Includes a quick chart-selection cheat-sheet and a mini task to produce one chart with correct labels and readable scales.",
+          "if_learned": false,
+          "associated_skills": [
+            "Effective basic charts selection and creation",
+            "Chart readability and labeling"
+          ],
+          "desired_outcome_when_completed": [
+            {
+              "name": "Selecting and generating effective basic charts from aggregated data",
+              "level": "intermediate"
+            },
+            {
+              "name": "Producing readable charts with correct series/ranges",
+              "level": "intermediate"
+            }
+          ]
+        },
+        {
+          "id": "Session 5",
+          "title": "Presentation Best Practices: Make the Sheet Tell the Story",
+          "abstract": "Turn your analysis into a presentation-ready spreadsheet. You’ll apply consistent formatting and layout: clear titles, descriptive axis labels, legend where needed, number formats (thousands separators, decimals), and spacing between input → calculation → output. Includes interactive checklist-based refinement: start with an “okay” sheet and improve it to be understandable to a non-author in 60 seconds. You’ll finish by producing a final packaged view: summary table + one or two charts + a short interpretation sentence.",
+          "if_learned": false,
+          "associated_skills": [
+            "Data presentation best practices",
+            "Communicating results clearly"
+          ],
+          "desired_outcome_when_completed": [
+            {
+              "name": "Presentation best practices in spreadsheets (labels/formatting/readability)",
+              "level": "intermediate"
+            },
+            {
+              "name": "Communicating analysis with coherent table + chart narrative",
+              "level": "intermediate"
+            }
+          ]
+        }
+      ],
+      "is_completed": false,
+      "is_deleted": false,
+      "start_time": 1774559855.086674
+    }
+  ],
+  "learner_information": "Software Engineer",
+  "learner_information_pdf": "",
+  "learner_information_text": "",
+  "learner_occupation": "Software Engineer",
+  "if_refining_learning_goal": false,
+  "if_rescheduling_learning_path": false,
+  "if_updating_learner_profile": false,
+  "selected_goal_id": 0,
+  "selected_session_id": 0,
+  "selected_point_id": 0,
+  "to_add_goal": {
+    "learning_goal": "",
+    "skill_gaps": [],
+    "learner_profile": {},
+    "learning_path": [],
+    "is_completed": false,
+    "is_deleted": false
+  },
+  "learned_skills_history": {
+    "0": [
+      0.7142857142857143
+    ]
+  },
+  "userId": "TestUser",
+  "document_caches": {},
+  "session_learning_times": {},
+  "exercise_messages": [
+    {
+      "role": "assistant",
+      "content": "Hi! What would you like to practice today? You can tell me a specific skill or your a goal you'd like to achieve."
+    },
+    {
+      "role": "user",
+      "content": "i would like to practice formulas"
+    },
+    {
+      "role": "assistant",
+      "content": "Great—formulas are a perfect place to build real spreadsheet confidence.  \n\n**One quick question:** what *kind of work/domain* do you want your formulas to help with (e.g., budgeting/personal finance, sales reporting, inventory, grades)?"
+    },
+    {
+      "role": "user",
+      "content": "personal finance"
+    },
+    {
+      "role": "assistant",
+      "content": ""
+    }
+  ],
+  "exercise_phase": "loading",
+  "exercise_plan": null,
+  "exercise_topic": {
+    "skill": "Personal finance spreadsheet formulas (SUM, IF, SUMIF/SUMIFS, absolute/relative references, and net balance calculations)",
+    "domain": "personal finance",
+    "goal": "Build a small budgeting sheet that calculates monthly totals by category, flags overspending using IF logic, and computes net cash flow using correct cell references.",
+    "difficulty_hint": "beginner"
+  }
+}

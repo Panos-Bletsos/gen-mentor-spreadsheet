@@ -1,8 +1,11 @@
 import ast
 import json
 import logging
+import os
 import time
 import uvicorn
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi.responses import Response as RawResponse
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -114,16 +117,17 @@ async def chat_with_autor(request: ChatWithAutorRequest):
             converted_messages = ast.literal_eval(request.messages)
         else:
             return JSONResponse(status_code=400, content={"detail": "messages must be a JSON array string"})
-        response = chat_with_tutor_with_llm(
+        result = chat_with_tutor_with_llm(
             llm,
             converted_messages,
             learner_profile,
             search_rag_manager=search_rag_manager,
-            use_search=True,
+            use_search=request.mode != "brainstorming",
             mode=request.mode,
             exercise_context=request.exercise_context,
         )
-        return {"response": response}
+        # result is {"response": str, "tool_calls": list[dict]}
+        return result
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -172,7 +176,7 @@ async def identify_skill_gap_with_info(request: SkillGapIdentificationRequest):
 
 
 @app.post("/identify-skill-gap")
-async def identify_skill_gap(goal: str = Form(...), cv: UploadFile = File(...), model_provider: str = Form("openai"), model_name: str = Form("gpt-4o")):
+async def identify_skill_gap(goal: str = Form(...), cv: UploadFile = File(...), model_provider: str | None = Form(None), model_name: str | None = Form(None)):
     llm = get_llm(model_provider, model_name)
     mapper = SkillRequirementMapper(llm)
     skill_gap_identifier = SkillGapIdentifier(llm)
@@ -217,8 +221,11 @@ async def create_learner_profile_with_info(request: LearnerProfileInitialization
         learner_profile = initialize_learner_profile_with_llm(
             llm, learning_goal, learner_information, skill_gaps
         )
-        return {"learner_profile": learner_profile}
+        result = {"learner_profile": learner_profile}
+        logger.debug("Created learner profile: %s", str(result)[:500])
+        return result
     except Exception as e:
+        logger.error("Failed to create learner profile: %s", str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/create-learner-profile")
@@ -279,8 +286,10 @@ async def schedule_learning_path(request: LearningPathSchedulingRequest):
         if not isinstance(learner_profile, dict):
             learner_profile = {}
         learning_path = schedule_learning_path_with_llm(llm, learner_profile, session_count)
+        logger.debug("Scheduled learning path: %s", str(learning_path)[:500])
         return learning_path
     except Exception as e:
+        logger.error("Failed to schedule learning path: %s", str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/reschedule-learning-path")
@@ -420,6 +429,77 @@ async def generate_synthetic_sheet_data(request: SyntheticSheetDataGenerationReq
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+PROVIDER_ENV_KEYS = {
+    "openai": "OPENAI_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "deepseek": "DEEPSEEK_API_KEY",
+    "together": "TOGETHER_API_KEY",
+    "ollama": None,  # no key needed
+}
+
+ENV_FILE = Path(__file__).parent / ".env"
+
+
+def _update_env_file(key: str, value: str) -> None:
+    """Update or add a key=value line in the backend .env file."""
+    lines = []
+    if ENV_FILE.exists():
+        with open(ENV_FILE, "r") as f:
+            content = f.read()
+        # Ensure file ends with newline so appended lines don't concatenate
+        if content and not content.endswith("\n"):
+            content += "\n"
+        lines = content.splitlines(keepends=True)
+    new_lines = []
+    key_found = False
+    for line in lines:
+        stripped = line.rstrip("\n").rstrip()
+        if stripped.startswith(f"{key}=") or stripped.startswith(f"{key} ="):
+            if not key_found:  # only keep first occurrence; drop duplicates
+                new_lines.append(f"{key}={value}\n")
+            key_found = True
+        else:
+            new_lines.append(line)
+    if not key_found:
+        new_lines.append(f"{key}={value}\n")
+    with open(ENV_FILE, "w") as f:
+        f.writelines(new_lines)
+
+
+@app.post("/configure-provider")
+async def configure_provider(request: ConfigureProviderRequest):
+    """Save a provider API key (and optional base URL) to backend/.env and reload env vars."""
+    provider = request.provider.lower()
+    env_key = PROVIDER_ENV_KEYS.get(provider)
+    if env_key is None and provider != "ollama":
+        return JSONResponse(status_code=400, content={"detail": f"Unknown provider: {provider}"})
+    try:
+        if env_key:
+            _update_env_file(env_key, request.api_key)
+        if request.base_url:
+            base_url_key = f"{provider.upper()}_BASE_URL"
+            _update_env_file(base_url_key, request.base_url)
+        load_dotenv(dotenv_path=ENV_FILE, override=True)
+        return {"status": "ok", "provider": provider}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@app.get("/configured-providers")
+async def configured_providers():
+    """Return list of provider names that have a non-empty API key configured."""
+    load_dotenv(dotenv_path=ENV_FILE, override=True)
+    result = []
+    for provider, env_key in PROVIDER_ENV_KEYS.items():
+        if env_key is None:
+            # ollama: always available (no key needed)
+            if provider == "ollama":
+                result.append(provider)
+        elif os.environ.get(env_key):
+            result.append(provider)
+    return {"providers": result}
+
+
 if __name__ == "__main__":
     server_cfg = app_config.get("server", {})
     host = app_config.get("server", {}).get("host", "127.0.0.1")

@@ -1,9 +1,10 @@
 import logging
 import time
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from utils.llm_output import preprocess_response
 
@@ -80,6 +81,20 @@ class BaseAgent:
             ]
         }
         return prompt
+
+    def _build_messages(self, variables: Dict[str, Any], task_prompt: Optional[str] = None) -> List:
+        """Build LangChain message list for direct model invocation.
+
+        Unlike _build_prompt() which returns _InputAgentState for create_agent(),
+        this returns [SystemMessage, HumanMessage] for model.invoke() / model.with_structured_output().
+        """
+        assert task_prompt is not None, "task_prompt must be provided."
+        messages = []
+        if self._system_prompt:
+            messages.append(SystemMessage(content=self._system_prompt))
+        formatted_task = task_prompt.format(**variables)
+        messages.append(HumanMessage(content=formatted_task))
+        return messages
 
     def invoke(self, input_dict: dict, task_prompt: Optional[str] = None) -> Any:
         """Invoke the agent with the given input text."""

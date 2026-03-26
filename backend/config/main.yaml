@@ -13,5 +13,5 @@ server:
 
 llm:
   provider: openai
-  model_name: gpt-5-nano
+  model_name: gpt-5.4-nano
   base_url: null

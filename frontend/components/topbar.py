@@ -1,10 +1,11 @@
 import streamlit as st
 import config
+from config import DEFAULT_LLM_TYPE
 from utils.state import save_persistent_state
 import requests
 import re
 from pathlib import Path
-from utils.request_api import get_available_models
+from utils.request_api import get_available_models, configure_provider, get_configured_providers
 
 
 @st.dialog("Login")
@@ -137,3 +138,57 @@ def settings():
         st.warning("Backend endpoint not reachable or invalid.")
         st.info("Ensure the GenMentor backend API is running and the endpoint is correct, including protocol and port (e.g., http://127.0.0.1:5000/).")
         st.info("Please refer to the [GenMentor Backend Setup Instructions](https://github.com/GeminiLight/gen-mentor/blob/main/backend/README.md) for more details on how to set up and run the backend service.")
+
+    st.markdown("---")
+    st.subheader("LLM Provider Configuration")
+
+    backend_url = st.session_state.get("backend_endpoint", config.backend_endpoint)
+    configured = get_configured_providers(backend_url)
+
+    provider_options = ["openai", "anthropic", "deepseek", "together", "ollama"]
+    selected_provider = st.selectbox(
+        "Provider",
+        provider_options,
+        format_func=lambda p: f"{p} ✓" if p in configured else p,
+    )
+
+    api_key_input = st.text_input(
+        "API Key",
+        type="password",
+        placeholder="Leave empty to keep existing key" if selected_provider in configured else f"Enter {selected_provider} API key",
+    )
+
+    show_base_url = st.checkbox("Custom base URL (optional, for self-hosted models)")
+    base_url_input = ""
+    if show_base_url:
+        base_url_input = st.text_input("Base URL", placeholder="http://localhost:11434")
+
+    model_name_input = st.text_input(
+        "Model name",
+        placeholder="e.g. gpt-4.1-nano, claude-sonnet-4-20250514",
+        value=st.session_state.get("llm_type", DEFAULT_LLM_TYPE).split("/", 1)[-1],
+    )
+
+    if st.button("Save Provider", type="secondary"):
+        if api_key_input or selected_provider == "ollama":
+            success = configure_provider(
+                backend_url,
+                selected_provider,
+                api_key_input,
+                base_url=base_url_input or None,
+            )
+            if success:
+                new_llm_type = f"{selected_provider}/{model_name_input}" if model_name_input else f"{selected_provider}/{DEFAULT_LLM_TYPE.split('/')[-1]}"
+                st.session_state["llm_type"] = new_llm_type
+                if new_llm_type not in st.session_state.get("available_models", []):
+                    st.session_state["available_models"] = [new_llm_type]
+                try:
+                    save_persistent_state()
+                except Exception:
+                    pass
+                st.success(f"Provider {selected_provider} configured. Active model: {new_llm_type}")
+                st.rerun()
+            else:
+                st.error("Failed to save provider configuration. Is the backend running?")
+        else:
+            st.warning("Please enter an API key.")

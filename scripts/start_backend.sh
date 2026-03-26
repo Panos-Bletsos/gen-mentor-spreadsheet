@@ -8,6 +8,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR/backend"
 
+# Activate virtual environment
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
+
 # Load environment variables from .env if present
 if [[ -f .env ]]; then
   set -a
@@ -17,6 +23,10 @@ if [[ -f .env ]]; then
 fi
 
 PORT="${1:-${BACKEND_PORT:-5000}}"
+LOG_FILE="${ROOT_DIR}/logs/backend.log"
+
+mkdir -p "${ROOT_DIR}/logs"
 
 echo "Starting backend (uvicorn) on port ${PORT}..."
-exec uvicorn main:app --port "${PORT}" --reload
+echo "Logs will be written to: ${LOG_FILE}"
+exec uvicorn main:app --port "${PORT}" --reload >> "${LOG_FILE}" 2>&1

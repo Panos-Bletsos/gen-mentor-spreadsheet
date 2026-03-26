@@ -9,6 +9,7 @@ from pydantic import BaseModel, field_validator
 
 from base import BaseAgent
 from base.search_rag import SearchRagManager, format_docs
+from modules.ai_chatbot_tutor.tools import BrainstormingDone, SheetUpdate
 
 logger = logging.getLogger(__name__)
 from modules.ai_chatbot_tutor.prompts.ai_chatbot_tutor import (
@@ -141,8 +142,30 @@ class AITutorChatbot(BaseAgent):
 				"external_resources": external_context,
 			}
 
-		raw_reply = self.invoke(input_vars, task_prompt=task_prompt)
-		return raw_reply
+		# General mode: use BaseAgent's invoke (unchanged path)
+		if mode == "general":
+			raw_reply = self.invoke(input_vars, task_prompt=task_prompt)
+			return {"response": raw_reply, "tool_calls": []}
+
+		# Brainstorming / Exercise mode: use bind_tools for structured signals
+		lang_messages = self._build_messages(input_vars, task_prompt=task_prompt)
+
+		if mode == "brainstorming":
+			model_with_tools = self._model.bind_tools([BrainstormingDone])
+		else:  # exercise
+			model_with_tools = self._model.bind_tools([SheetUpdate])
+
+		ai_response = model_with_tools.invoke(lang_messages)
+
+		# Extract conversational text + any tool calls
+		result = {"response": ai_response.content or "", "tool_calls": []}
+		if ai_response.tool_calls:
+			for tc in ai_response.tool_calls:
+				result["tool_calls"].append({
+					"name": tc["name"],
+					"args": tc["args"],
+				})
+		return result
 
 
 def chat_with_tutor_with_llm(

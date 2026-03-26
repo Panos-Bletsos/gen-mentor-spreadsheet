@@ -5,7 +5,7 @@ import logging
 import time
 from typing import Any, Optional
 
-from base import BaseAgent
+from base import BaseStructuredAgent, BaseAgent
 from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
 from modules.exercise_generator.prompts.exercise_planner import (
     exercise_planner_system_prompt,
@@ -47,9 +47,9 @@ def _topic_to_str(topic: Any) -> str:
 
 def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: list[dict], retry_reason: str = "") -> dict:
     """Build a data_generator payload from the exercise plan + one sheet."""
-    columns = sheet_plan.get("prefilled", [])
-    if columns == ["all"]:
-        columns = sheet_plan.get("columns", [])
+    all_columns = sheet_plan.get("columns", [])
+    prefilled = sheet_plan.get("prefilled", [])
+    student_fills = sheet_plan.get("student_fills", [])
 
     context_parts = [
         f"Generate data for a spreadsheet exercise.",
@@ -57,6 +57,13 @@ def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: 
         f"Sheet: {sheet_plan['name']}",
         f"This data is for teaching {plan.difficulty}-level spreadsheet skills.",
     ]
+
+    # Specify which columns to fill and which to leave empty
+    if prefilled:
+        context_parts.append(f"Fill these columns with realistic data: {prefilled}")
+    if student_fills:
+        context_parts.append(f"Leave these columns EMPTY (students will fill them): {student_fills}")
+
     if prev_sheets_data:
         context_parts.append(f"Related sheets already generated: {json.dumps([s['name'] for s in prev_sheets_data])}")
         context_parts.append("Ensure referential integrity with existing sheets.")
@@ -66,27 +73,23 @@ def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: 
     return {
         "user_request": " ".join(context_parts),
         "row_count": plan.row_count,
-        "columns": columns if columns else None,
+        "columns": all_columns if all_columns else None,
         "constraints": retry_reason,
     }
 
 
-class ExercisePlanner(BaseAgent):
+class ExercisePlanner(BaseStructuredAgent):
+    output_schema = ExercisePlan
+
     def __init__(self, model: Any):
-        super().__init__(
-            model=model,
-            system_prompt=exercise_planner_system_prompt,
-            jsonalize_output=True,
-        )
+        super().__init__(model=model, system_prompt=exercise_planner_system_prompt)
 
 
-class QualityJudge(BaseAgent):
+class QualityJudge(BaseStructuredAgent):
+    output_schema = JudgeQualityResult
+
     def __init__(self, model: Any):
-        super().__init__(
-            model=model,
-            system_prompt=judge_quality_system_prompt,
-            jsonalize_output=True,
-        )
+        super().__init__(model=model, system_prompt=judge_quality_system_prompt)
 
 
 class OpeningMessageGenerator(BaseAgent):
@@ -103,6 +106,7 @@ def start_exercise_with_llm(
     topic: Any,
     learner_profile: Any = "",
     brainstorming_history: list[dict] | None = None,
+
 ) -> dict:
     """Run the 4-step exercise generation chain.
 
@@ -124,10 +128,7 @@ def start_exercise_with_llm(
         "learner_profile": str(learner_profile),
         "brainstorming_context": brainstorming_context,
     }
-    plan_raw = planner.invoke(plan_input, task_prompt=exercise_planner_task_prompt)
-    if isinstance(plan_raw, str):
-        plan_raw = json.loads(plan_raw)
-    exercise_plan = ExercisePlan.model_validate(plan_raw)
+    exercise_plan = planner.invoke(plan_input, task_prompt=exercise_planner_task_prompt)
 
     logger.info("EXERCISE plan created: difficulty=%s, sheets=%d, rows=%d", exercise_plan.difficulty, len(exercise_plan.sheets), exercise_plan.row_count)
 
@@ -148,41 +149,36 @@ def start_exercise_with_llm(
         retry_reason = ""
         sheet_data = None
         for attempt in range(1 + MAX_JUDGE_RETRIES):
-            data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, retry_reason)
-            sheet_data = generate_synthetic_spreadsheet_data_with_llm(
-                llm,
-                user_request=data_request["user_request"],
-                row_count=data_request["row_count"],
-                columns=data_request["columns"],
-                constraints=data_request["constraints"],
-            )
+            try:
+                data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, retry_reason)
+                sheet_data = generate_synthetic_spreadsheet_data_with_llm(
+                    llm,
+                    user_request=data_request["user_request"],
+                    row_count=data_request["row_count"],
+                    columns=data_request["columns"],
+                    constraints=data_request["constraints"],
+                )
+            except (ValueError, Exception) as e:
+                retry_reason = str(e)
+                logger.warning("EXERCISE data generation FAILED for sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
+                if attempt == MAX_JUDGE_RETRIES:
+                    raise
+                continue
 
             # Judge quality
             judge_input = {
-                "exercise_plan": json.dumps(plan_raw),
+                "exercise_plan": exercise_plan.model_dump_json(),
                 "generated_data": json.dumps(sheet_data),
                 "difficulty": exercise_plan.difficulty,
                 "expected_rows": exercise_plan.row_count,
             }
-            judge_raw = judge.invoke(judge_input, task_prompt=judge_quality_task_prompt)
-            if isinstance(judge_raw, str):
-                judge_raw = json.loads(judge_raw)
-            judge_result = JudgeQualityResult.model_validate(judge_raw)
+            judge_result = judge.invoke(judge_input, task_prompt=judge_quality_task_prompt)
 
             if judge_result.passed:
                 logger.info("EXERCISE quality judge PASSED for sheet '%s' (attempt %d)", sheet_dict["name"], attempt + 1)
                 break
             retry_reason = judge_result.reason
             logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
-
-        # Add student_fills columns as empty
-        student_cols = sheet_dict.get("student_fills", [])
-        if student_cols and sheet_data:
-            for col in student_cols:
-                if col not in sheet_data.get("headers", []):
-                    sheet_data["headers"].append(col)
-                    for row in sheet_data.get("rows", []):
-                        row.append("")
 
         sheet_data["name"] = sheet_dict["name"]
         all_sheets_data.append(sheet_data)
@@ -199,7 +195,7 @@ def start_exercise_with_llm(
         f"{s['name']}: {s.get('headers', [])}" for s in all_sheets_data
     )
     msg_input = {
-        "exercise_plan": json.dumps(plan_raw),
+        "exercise_plan": exercise_plan.model_dump_json(),
         "learner_profile": str(learner_profile),
         "sheet_names": str(sheet_names),
         "columns_summary": columns_summary,

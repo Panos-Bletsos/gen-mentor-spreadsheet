@@ -1,10 +1,9 @@
 import json
-import time
 import streamlit as st
 import streamlit.components.v1 as components
 from assets.js.univer_sheets import get_univer_sheets_html
 from streamlit_js_eval import streamlit_js_eval
-from utils.sheet_data_parser import build_univer_workbook_from_payload, extract_cell_values
+from utils.sheet_data_parser import build_univer_multi_sheet_workbook, extract_cell_values
 from utils.request_api import start_exercise, chat_with_tutor_exercise, update_learner_profile
 from utils.state import initialize_session_state
 
@@ -16,70 +15,12 @@ st.markdown(
 )
 
 
-def parse_brainstorming_done(text):
-    """Check if tutor response contains brainstorming_done JSON signal.
-    Uses brace-counting to extract nested JSON with exercise_topic object.
-    """
-    marker = '"brainstorming_done"'
-    idx = text.find(marker)
-    if idx == -1:
-        return text, None
-    start = text.rfind("{", 0, idx)
-    if start == -1:
-        return text, None
-    depth = 0
-    end = start
-    for i in range(start, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    if depth != 0:
-        return text, None
-    try:
-        signal = json.loads(text[start:end])
-        if signal.get("brainstorming_done"):
-            display_text = text[:start].strip()
-            return display_text, signal.get("exercise_topic", {})
-    except json.JSONDecodeError:
-        pass
-    return text, None
-
-
-def _extract_json(text):
-    """Extract a JSON object from LLM output, handling code fences and surrounding text."""
-    import re
-    # Strip markdown code fences
-    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if fenced:
-        try:
-            return json.loads(fenced.group(1))
-        except json.JSONDecodeError:
-            pass
-    # Try direct parse
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    # Brace-counting: find first { and its matching }
-    start = text.find("{")
-    if start == -1:
-        return {}
-    depth = 0
-    for i in range(start, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                try:
-                    return json.loads(text[start:i + 1])
-                except json.JSONDecodeError:
-                    return {}
-    return {}
+def _find_tool_call(tool_calls, tool_name):
+    """Find a tool call by name in the tool_calls list. Returns args dict or None."""
+    for tc in (tool_calls or []):
+        if tc.get("name") == tool_name:
+            return tc.get("args", {})
+    return None
 
 
 def _capture_sheet_snapshot():
@@ -115,6 +56,19 @@ def _capture_sheet_snapshot():
                 return {"cell_values": cell_values, "raw_snapshot": snapshot}
     except Exception:
         pass
+
+    # Fallback: reconstruct from session state spreadsheet data
+    result = st.session_state.get("exercise_plan", {})
+    spreadsheet_data = result.get("spreadsheet_data", {})
+    sheets = spreadsheet_data.get("sheets", [])
+    if sheets:
+        fallback = {}
+        for sheet in sheets:
+            name = sheet.get("name", "Sheet1")
+            headers = sheet.get("headers", [])
+            rows = sheet.get("rows", [])
+            fallback[name] = [headers] + rows
+        return {"cell_values": fallback, "source": "session_state"}
     return {}
 
 
@@ -147,14 +101,16 @@ def render_brainstorming():
         if not st.session_state["exercise_messages"]:
             st.session_state["exercise_messages"].append({
                 "role": "assistant",
-                "content": "Hi! What would you like to practice today? You can tell me a specific skill (like VLOOKUP or pivot tables) or a domain you're interested in (like sales analysis or financial modeling).",
+                "content": "Hi! What would you like to practice today? You can tell me a specific skill or your a goal you'd like to achieve.",
             })
 
-        chat_container = st.container(height=500)
+        chat_container = st.container()
         with chat_container:
             for msg in st.session_state["exercise_messages"]:
                 st.chat_message(msg["role"]).write(msg["content"])
 
+
+        st.empty()
         if prompt := st.chat_input("Tell me what you want to practice..."):
             st.session_state["exercise_messages"].append({"role": "user", "content": prompt})
 
@@ -166,7 +122,8 @@ def render_brainstorming():
                 )
 
             if reply:
-                display_text, exercise_topic = parse_brainstorming_done(reply)
+                display_text = reply.get("response", "")
+                exercise_topic = _find_tool_call(reply.get("tool_calls", []), "BrainstormingDone")
                 st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
 
                 if exercise_topic:
@@ -195,7 +152,8 @@ def render_brainstorming():
                         mode="brainstorming",
                     )
                 if reply:
-                    display_text, exercise_topic = parse_brainstorming_done(reply)
+                    display_text = reply.get("response", "")
+                    exercise_topic = _find_tool_call(reply.get("tool_calls", []), "BrainstormingDone")
                     st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
                     if exercise_topic:
                         st.session_state["exercise_topic"] = exercise_topic
@@ -220,6 +178,7 @@ def render_loading():
 
     if result and "exercise_plan" in result:
         st.session_state["exercise_plan"] = result
+        st.session_state["_sheet_data_version"] = 0
         st.session_state["exercise_messages"].append({
             "role": "assistant",
             "content": result["tutor_message"],
@@ -248,20 +207,14 @@ def render_exercising():
         title = plan.get("scenario", "Exercise")[:80]
         st.header(title)
 
-        # Load first sheet into Univer (multi-sheet support is a follow-up)
         sheets = spreadsheet_data.get("sheets", [])
         if sheets:
-            first_sheet = sheets[0]
-            payload = {"headers": first_sheet.get("headers", []), "rows": first_sheet.get("rows", [])}
-            workbook = build_univer_workbook_from_payload(
-                payload,
-                sheet_name=first_sheet.get("name", "Sheet1"),
-                workbook_name="Exercise",
-            )
+            workbook = build_univer_multi_sheet_workbook(sheets, workbook_name="Exercise")
             workbook_json = json.dumps(workbook)
             univer_html = get_univer_sheets_html(height="100%", workbook_data=workbook_json)
-            nonce = str(time.time())
-            univer_html += f"<!-- nonce:{nonce} -->"
+            # Add a nonce to force iframe reload when sheet_data_version changes
+            sheet_version = st.session_state.get("_sheet_data_version", 0)
+            univer_html += f"<!-- sheet_v{sheet_version} -->"
             components.html(univer_html, height=600, scrolling=False)
         else:
             st.warning("No spreadsheet data available.")
@@ -297,7 +250,12 @@ def render_exercising():
                 )
 
             if reply:
-                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply})
+                display_text = reply.get("response", "")
+                sheet_update = _find_tool_call(reply.get("tool_calls", []), "SheetUpdate")
+                st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
+                if sheet_update:
+                    st.session_state["exercise_plan"]["spreadsheet_data"] = sheet_update
+                    st.session_state["_sheet_data_version"] = st.session_state.get("_sheet_data_version", 0) + 1
             else:
                 st.session_state["exercise_messages"].append({
                     "role": "assistant",
@@ -326,7 +284,7 @@ def render_exercising():
                 )
 
             if reply:
-                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply})
+                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply.get("response", "")})
 
             # Update learner profile with performance data
             with st.spinner("Updating your learner profile..."):
@@ -339,7 +297,12 @@ def render_exercising():
                     exercise_context=exercise_context,
                 )
                 if perf_reply:
-                    perf_data = _extract_json(perf_reply)
+                    # Try to parse the response text as JSON for performance data
+                    perf_text = perf_reply.get("response", "")
+                    try:
+                        perf_data = json.loads(perf_text)
+                    except (json.JSONDecodeError, TypeError):
+                        perf_data = {}
                     if perf_data:
                         session_info = {
                             "type": "exercise",

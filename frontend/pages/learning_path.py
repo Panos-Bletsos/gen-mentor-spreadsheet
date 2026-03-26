@@ -34,9 +34,11 @@ def render_learning_path():
         with st.spinner('Scheduling Learning Path ...'):
             goal["learning_path"] = schedule_learning_path(goal["learner_profile"], session_count=8)
             save_persistent_state()
-            st.toast("🎉 Successfully schedule learning path!")
-            st.rerun()
-        my_bar.empty()
+            if goal["learning_path"]:
+                st.toast("🎉 Successfully scheduled learning path!")
+                st.rerun()
+            else:
+                st.error("Failed to schedule learning path. Please try again.")
     else:
         render_overall_information(goal)
         render_learning_sessions(goal)

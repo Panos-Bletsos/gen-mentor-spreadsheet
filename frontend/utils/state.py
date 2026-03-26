@@ -1,6 +1,7 @@
 import streamlit as st
 from collections import defaultdict
 import config
+from config import DEFAULT_LLM_TYPE
 import json
 from pathlib import Path
 
@@ -77,6 +78,13 @@ def save_persistent_state():
 
 
 def initialize_session_state():
+    # Load persisted state FIRST, before setting defaults
+    # This ensures user data is loaded before defaults are applied
+    try:
+        load_persistent_state()
+    except Exception:
+        pass
+
     for key in ["if_complete_onboarding", "is_learner_profile_ready", "is_learning_path_ready", "is_skill_gap_ready", "is_knowledge_document_ready"]:
         if key not in st.session_state:
             st.session_state[key] = False
@@ -85,7 +93,7 @@ def initialize_session_state():
         st.session_state["backend_endpoint"] = config.backend_endpoint
 
     if "available_models" not in st.session_state:
-        st.session_state["available_models"] = ["openai/gpt-4.1-nano"]
+        st.session_state["available_models"] = [DEFAULT_LLM_TYPE]
 
     if "llm_type" not in st.session_state:
         if len(st.session_state["available_models"]) > 0:
@@ -95,10 +103,10 @@ def initialize_session_state():
 
     if "userId" not in st.session_state:
         st.session_state["userId"] = "TestUser"
-        
+
     if "sample_number" not in st.session_state:
         st.session_state["sample_number"] = 2
-        
+
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
 
@@ -123,10 +131,10 @@ def initialize_session_state():
 
     if "goals" not in st.session_state:
         st.session_state["goals"] = []
-    
+
     if "current_page" not in st.session_state:
         st.session_state["current_page"] = {}
-        
+
     if "document_caches" not in st.session_state:
         st.session_state["document_caches"] = {}
 
@@ -156,11 +164,6 @@ def initialize_session_state():
     if 'learned_skills_history' not in st.session_state:
         st.session_state['learned_skills_history'] = {}
 
-    try:
-        load_persistent_state()
-    except Exception:
-        pass
-    
     # Ensure to_add_goal has all keys, migrating old state if necessary
     if "to_add_goal" in st.session_state and isinstance(st.session_state["to_add_goal"], dict):
         defaults = {

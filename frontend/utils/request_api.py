@@ -1,7 +1,7 @@
 import json
 import httpx
 import streamlit as st
-from config import backend_endpoint, use_mock_data, use_search
+from config import backend_endpoint, use_mock_data, use_search, DEFAULT_LLM_TYPE
 
 API_NAMES = {
     "chat_with_tutor": "chat-with-tutor",
@@ -26,11 +26,12 @@ API_NAMES = {
 }
 
 
-def parse_llm_settings(llm_type):
-    if "/" in llm_type:
-        parts = llm_type.split("/", 1)
+def parse_llm_settings(llm_type=None):
+    resolved = llm_type or st.session_state.get("llm_type") or DEFAULT_LLM_TYPE
+    if "/" in resolved:
+        parts = resolved.split("/", 1)
         return parts[0].lower(), parts[1]
-    return "openai", "gpt-4o"
+    return "openai", resolved
 
 
 def make_post_request(api_name, data, mock_data_path=None, timeout=500):
@@ -51,6 +52,31 @@ def make_post_request(api_name, data, mock_data_path=None, timeout=500):
         st.write("Failed to fetch data. Error:", e)
         return {}
 
+def configure_provider(backend_url, provider, api_key, base_url=None):
+    """Save a provider API key to the backend .env."""
+    data = {"provider": provider, "api_key": api_key}
+    if base_url:
+        data["base_url"] = base_url
+    url = f"{backend_url}configure-provider"
+    try:
+        response = httpx.post(url, json=data, timeout=30)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+def get_configured_providers(backend_url):
+    """Fetch list of provider names that have keys configured on the backend."""
+    url = f"{backend_url}configured-providers"
+    try:
+        response = httpx.get(url, timeout=30)
+        if response.status_code == 200:
+            return response.json().get("providers", [])
+        return []
+    except Exception:
+        return []
+
+
 def get_available_models(backend_endpoint):
     backend_url = f"{backend_endpoint}list-llm-models"
     try:
@@ -64,17 +90,24 @@ def get_available_models(backend_endpoint):
         # st.write("Failed to fetch available models. Error:", e)
         return []
 
-def chat_with_tutor(chat_messages, learner_profile, llm_type="gpt4o", method_name="genmentor"):
+def chat_with_tutor(chat_messages, learner_profile, llm_type=None, method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "messages": str(chat_messages),
         "learner_profile": str(learner_profile),
-        "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["chat_with_tutor"], data, "./assets/data_example/ai)tutor_chat.json")
+    if not response:
+        return None
+    # Handle both dict and string responses
+    if isinstance(response, str):
+        return response
     return response.get("response") if response else None
 
-def refine_learning_goal(learning_goal, learner_information, llm_type="gpt4o", method_name="genmentor"):
+def refine_learning_goal(learning_goal, learner_information, llm_type=None, method_name="genmentor"):
     model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
@@ -88,7 +121,7 @@ def refine_learning_goal(learning_goal, learner_information, llm_type="gpt4o", m
     return response.get("refined_goal") if response else "Refined learning goal"
 
 @st.cache_resource
-def identify_skill_gap(learning_goal, learner_information, llm_type="gpt4o", method_name="genmentor"):
+def identify_skill_gap(learning_goal, learner_information, llm_type=None, method_name="genmentor"):
     model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
@@ -102,7 +135,7 @@ def identify_skill_gap(learning_goal, learner_information, llm_type="gpt4o", met
     return response.get("skill_gaps") if response else None
 
 @st.cache_resource
-def create_learner_profile(learning_goal, learner_information, skill_gaps, llm_type="gpt4o", method_name="genmentor"):
+def create_learner_profile(learning_goal, learner_information, skill_gaps, llm_type=None, method_name="genmentor"):
     model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_goal": str(learning_goal),
@@ -116,43 +149,49 @@ def create_learner_profile(learning_goal, learner_information, skill_gaps, llm_t
     response = make_post_request(API_NAMES["create_profile"], data, "./assets/data_example/learner_profile.json")
     return response.get("learner_profile") if response else None
 
-def update_learner_profile(learner_profile, learner_interactions, learner_information="", session_information="", llm_type="gpt4o", method_name="genmentor"):
+def update_learner_profile(learner_profile, learner_interactions, learner_information="", session_information="", llm_type=None, method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learner_profile": str(learner_profile),
         "learner_interactions": str(learner_interactions),
         "learner_information": str(learner_information),
         "session_information": str(session_information),
-        "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["update_profile"], data, "./assets/data_example/learner_profile.json")
     return response.get("learner_profile") if response else None
 
 # @st.cache_resource
-def schedule_learning_path(learner_profile, session_count, llm_type="gpt4o", method_name="genmentor"):
+def schedule_learning_path(learner_profile, session_count, llm_type=None, method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learner_profile": str(learner_profile),
         "session_count": session_count,
-        "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["schedule_path"], data, "./assets/data_example/learning_path.json")
     return response.get("learning_path") if response else None
 
-def reschedule_learning_path(learning_path, learner_profile, session_count, other_feedback="", llm_type="gpt4o", method_name="genmentor"):
+def reschedule_learning_path(learning_path, learner_profile, session_count, other_feedback="", llm_type=None, method_name="genmentor"):
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "learning_path": str(learning_path),
         "learner_profile": str(learner_profile),
         "session_count": int(session_count),
         "other_feedback": str(other_feedback),
-        "llm_type": str(llm_type),
         "method_name": str(method_name),
+        "model_provider": model_provider,
+        "model_name": model_name,
     }
     response = make_post_request(API_NAMES["reschedule_path"], data, "./assets/data_example/learning_path.json")
     return response.get("rescheduled_learning_path") if response else None
 
 # @st.cache_resource
-def generate_document_quizzes(learner_profile, learning_document, single_choice_count, multiple_choice_count, true_false_count, short_answer_count, llm_type="gpt4o", method_name="genmentor"):
+def generate_document_quizzes(learner_profile, learning_document, single_choice_count, multiple_choice_count, true_false_count, short_answer_count, llm_type=None, method_name="genmentor"):
     data = {
         "learner_profile": str(learner_profile),
         "learning_document": str(learning_document),
@@ -167,7 +206,7 @@ def generate_document_quizzes(learner_profile, learning_document, single_choice_
     return response.get("document_quiz") if response else None
 
 # @st.cache_resource
-def explore_knowledge_points(learner_profile, learning_path, learning_session, llm_type="gpt4o", method_name="genmentor"):
+def explore_knowledge_points(learner_profile, learning_path, learning_session, llm_type=None, method_name="genmentor"):
     data = {
         "learner_profile": str(learner_profile),
         "learning_path": str(learning_path),
@@ -177,7 +216,7 @@ def explore_knowledge_points(learner_profile, learning_path, learning_session, l
     return response.get("knowledge_points") if response else None
 
 # @st.cache_resource
-def draft_knowledge_point(learner_profile, learning_path, learning_session, knowledge_points, knowledge_point, use_search, llm_type="gpt4o", method_name="genmentor"):
+def draft_knowledge_point(learner_profile, learning_path, learning_session, knowledge_points, knowledge_point, use_search, llm_type=None, method_name="genmentor"):
     data = {
         "learner_profile": str(learner_profile),
         "learning_path": str(learning_path),
@@ -192,7 +231,7 @@ def draft_knowledge_point(learner_profile, learning_path, learning_session, know
     return response.get("knowledge_draft") if response else None
 
 # @st.cache_resource
-def draft_knowledge_points(learner_profile, learning_path, learning_session, knowledge_points, allow_parallel, use_search, llm_type="gpt4o", method_name="genmentor"):
+def draft_knowledge_points(learner_profile, learning_path, learning_session, knowledge_points, allow_parallel, use_search, llm_type=None, method_name="genmentor"):
     data = {
         "learner_profile": str(learner_profile),
         "learning_path": str(learning_path),
@@ -207,7 +246,7 @@ def draft_knowledge_points(learner_profile, learning_path, learning_session, kno
     return response.get("knowledge_drafts") if response else None
 
 # @st.cache_resource
-def integrate_learning_document(learner_profile, learning_path, learning_session, knowledge_points, knowledge_drafts, output_markdown=False, llm_type="gpt4o", method_name="genmentor"):
+def integrate_learning_document(learner_profile, learning_path, learning_session, knowledge_points, knowledge_drafts, output_markdown=False, llm_type=None, method_name="genmentor"):
     data = {
         "learner_profile": str(learner_profile),
         "learning_path": str(learning_path),
@@ -232,8 +271,7 @@ def generate_synthetic_sheet_data(
     constraints="",
     llm_type=None,
 ):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
-    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "user_request": str(user_request),
         "row_count": int(row_count),
@@ -246,8 +284,7 @@ def generate_synthetic_sheet_data(
 
 
 def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_type=None):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
-    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "topic": topic,
         "learner_profile": str(learner_profile),
@@ -259,8 +296,7 @@ def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_ty
 
 
 def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):
-    resolved_llm_type = llm_type or st.session_state.get("llm_type", "openai/gpt-4.1-nano")
-    model_provider, model_name = parse_llm_settings(resolved_llm_type)
+    model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "messages": str(chat_messages),
         "learner_profile": str(learner_profile),
@@ -269,5 +305,11 @@ def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exe
         "model_provider": model_provider,
         "model_name": model_name,
     }
+    print(f"== learner_profile=${learner_profile} ")
     response = make_post_request(API_NAMES["chat_with_tutor"], data)
-    return response.get("response") if response else None
+    if not response:
+        return None
+    # Handle both dict and string responses
+    if isinstance(response, str):
+        return {"response": response, "tool_calls": []}
+    return {"response": response.get("response", ""), "tool_calls": response.get("tool_calls", [])}

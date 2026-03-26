@@ -2,6 +2,7 @@ import json
 import time
 import streamlit as st
 import streamlit.components.v1 as components
+from config import DEFAULT_LLM_TYPE
 from assets.js.univer_sheets import get_univer_sheets_html
 from utils.request_api import generate_synthetic_sheet_data
 from utils.sheet_data_parser import (
@@ -112,7 +113,7 @@ def render_sheets():
                             row_count=st.session_state.sheet_row_count,
                             columns=parsed_columns or None,
                             constraints=st.session_state.sheet_constraints or "",
-                            llm_type=st.session_state.get("llm_type", "openai/gpt-4o"),
+                            llm_type=st.session_state.get("llm_type", DEFAULT_LLM_TYPE),
                         )
                         if not generated:
                             st.error("No response from backend data generator.")

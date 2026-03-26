@@ -5,8 +5,8 @@ from fastapi import File, UploadFile, Form
 
 
 class BaseRequest(BaseModel):
-    model_provider: str = "openai"
-    model_name: str = "gpt-5.4-nano"
+    model_provider: Optional[str] = None
+    model_name: Optional[str] = None
     method_name: str = "genmentor"
 
 
@@ -186,3 +186,21 @@ class StartExerciseRequest(BaseRequest):
     topic: Any  # str or dict (ExerciseTopic)
     learner_profile: Any = ""
     brainstorming_history: list = []
+
+
+class ToolCallResult(BaseModel):
+    """One tool call made by the LLM during a chat turn."""
+    name: str
+    args: dict
+
+
+class ChatWithTutorResponse(BaseModel):
+    """Response from /chat-with-tutor endpoint."""
+    response: str
+    tool_calls: list[ToolCallResult] = []
+
+
+class ConfigureProviderRequest(BaseModel):
+    provider: str
+    api_key: str
+    base_url: Optional[str] = None

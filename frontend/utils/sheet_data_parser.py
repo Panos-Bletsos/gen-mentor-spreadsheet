@@ -165,6 +165,64 @@ def build_univer_workbook_from_payload(
     )
 
 
+def build_univer_multi_sheet_workbook(sheets_list, workbook_name="GenMentor Sheet"):
+    """
+    Build a Univer workbook with multiple sheets.
+
+    Args:
+        sheets_list: list of dicts, each with keys "name", "headers", "rows"
+        workbook_name: Name of the workbook
+
+    Returns:
+        dict: Univer workbook snapshot compatible with createWorkbook()
+    """
+    if not sheets_list:
+        return build_univer_workbook_from_grid([[]], workbook_name=workbook_name)
+
+    sheet_order = []
+    sheets_dict = {}
+
+    for i, sheet_info in enumerate(sheets_list):
+        sheet_id = f"sheet{i + 1}"
+        sheet_name = sheet_info.get("name", f"Sheet{i + 1}")
+        headers = sheet_info.get("headers", [])
+        rows = sheet_info.get("rows", [])
+        grid = [headers] + rows if headers else rows
+
+        cell_data = {}
+        max_col_count = 0
+        for row_idx, row in enumerate(grid):
+            if not isinstance(row, list):
+                continue
+            max_col_count = max(max_col_count, len(row))
+            row_cells = {}
+            for col_idx, value in enumerate(row):
+                cell = _build_cell_entry(value)
+                if cell is not None:
+                    row_cells[str(col_idx)] = cell
+            if row_cells:
+                cell_data[str(row_idx)] = row_cells
+
+        row_count = max(1000, len(grid) + 20)
+        column_count = max(20, max_col_count + 5)
+
+        sheet_order.append(sheet_id)
+        sheets_dict[sheet_id] = {
+            "id": sheet_id,
+            "name": sheet_name,
+            "cellData": cell_data,
+            "rowCount": row_count,
+            "columnCount": column_count,
+        }
+
+    return {
+        "id": "workbook1",
+        "name": workbook_name,
+        "sheetOrder": sheet_order,
+        "sheets": sheets_dict,
+    }
+
+
 def extract_cell_values(sheet_data):
     """
     Extract cell values from Univer sheet snapshot into a 2D array.

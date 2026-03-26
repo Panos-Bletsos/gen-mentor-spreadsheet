@@ -37,8 +37,7 @@ class LLMFactory:
             ValueError: If neither llm nor model is provided
         """
         if model is None:
-            model = "claude-3-5-sonnet-20241022"
-            model_provider = model_provider or "anthropic"
+            raise ValueError("model must be specified")
 
         config_kwargs = {
             "model": model,
@@ -55,8 +54,13 @@ class LLMFactory:
         elif base_url is not None and model_provider == "openai":
             config_kwargs["api_key"] = "synthetic-key-for-vllm"
 
-        llm = init_chat_model(**config_kwargs)
-        return llm
+        try:
+            llm = init_chat_model(**config_kwargs)
+            logger.info("LLM initialized: provider=%s, model=%s", model_provider, model)
+            return llm
+        except Exception as e:
+            logger.error("Failed to initialize LLM: provider=%s, model=%s, error=%s", model_provider, model, e)
+            raise
 
     @classmethod
     def from_config(cls, config: Union[DictConfig, OmegaConf, Dict[str, Any]]) -> "LLMFactory":
@@ -73,8 +77,8 @@ class LLMFactory:
         """
         config = ensure_config_dict(config)
         return init_chat_model(
-            model=config.get("model_name", "deepseek-chat"),
-            model_provider=config.get("model_provider", "deepseek"),
+            model=config.get("model_name", "gpt-4.1-nano"),
+            model_provider=config.get("model_provider", "openai"),
             base_url=config.get("base_url", None),
             # api_key=config.api_key,
             temperature=0,  # Always 0 for deterministic results

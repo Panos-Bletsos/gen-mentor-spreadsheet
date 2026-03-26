@@ -50,6 +50,9 @@ def extract_think_and_result(info):
 
 
 def preprocess_response(response, only_text=True, exclude_think=False, json_output=False):
+    import logging
+    logger = logging.getLogger(__name__)
+
     if only_text or exclude_think or json_output:
         response = get_text_from_response(response)
     if exclude_think:
@@ -59,7 +62,7 @@ def preprocess_response(response, only_text=True, exclude_think=False, json_outp
         try:
             response = convert_json_output(response)
         except json.JSONDecodeError as e:
-            print(f"Error parsing JSON output: {e}")
+            logger.error("Failed to parse JSON output: %s\nRaw response: %s", str(e), response[:500])
             response = {"error": "Invalid JSON output", "raw_content": response}
             raise e
     return response
