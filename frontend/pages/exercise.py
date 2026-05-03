@@ -5,7 +5,7 @@ from assets.js.univer_sheets import get_univer_sheets_html
 from streamlit_js_eval import streamlit_js_eval
 from utils.sheet_data_parser import build_univer_multi_sheet_workbook, extract_cell_values
 from utils.request_api import start_exercise, chat_with_tutor_exercise, update_learner_profile
-from utils.state import initialize_session_state
+from utils.state import initialize_session_state, save_persistent_state
 
 initialize_session_state()
 
@@ -72,6 +72,13 @@ def _capture_sheet_snapshot():
     return {}
 
 
+def _reset_exercise():
+    st.session_state["exercise_phase"] = None
+    st.session_state["exercise_topic"] = None
+    st.session_state["exercise_messages"] = []
+    st.session_state["exercise_plan"] = None
+
+
 def get_exercise_phase():
     phase = st.session_state.get("exercise_phase")
     if phase:
@@ -82,6 +89,12 @@ def get_exercise_phase():
         st.session_state["exercise_topic"] = topic
         return "loading"
     return "brainstorming"
+
+
+def render_toolbar():
+    if st.button("Start New Exercise", key="start_new_exercise"):
+        _reset_exercise()
+        st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -332,19 +345,14 @@ def render_completed():
         for msg in st.session_state["exercise_messages"]:
             st.chat_message(msg["role"]).write(msg["content"])
 
-    if st.button("Start a New Exercise"):
-        st.session_state["exercise_phase"] = "brainstorming"
-        st.session_state["exercise_messages"] = []
-        st.session_state["exercise_plan"] = None
-        st.session_state["exercise_topic"] = None
-        st.rerun()
-
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def render_exercise():
+    save_persistent_state()
+    render_toolbar()
     phase = get_exercise_phase()
     if phase == "loading":
         render_loading()

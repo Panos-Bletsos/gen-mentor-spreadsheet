@@ -1,0 +1,39 @@
+{
+  "backend_endpoint": "http://127.0.0.1:5001/",
+  "available_models": [
+    "openai/gpt-4.1-nano"
+  ],
+  "if_complete_onboarding": false,
+  "sample_number": 2,
+  "logged_in": false,
+  "show_chatbot": true,
+  "llm_type": "openai/gpt-4.1-nano",
+  "tutor_messages": [],
+  "goals": [],
+  "learner_information": "",
+  "learner_information_pdf": "",
+  "learner_information_text": "",
+  "learner_occupation": "",
+  "if_refining_learning_goal": false,
+  "if_rescheduling_learning_path": false,
+  "if_updating_learner_profile": false,
+  "selected_goal_id": 0,
+  "selected_session_id": 0,
+  "selected_point_id": 0,
+  "to_add_goal": {
+    "learning_goal": "",
+    "skill_gaps": [],
+    "learner_profile": {},
+    "learning_path": [],
+    "is_completed": false,
+    "is_deleted": false
+  },
+  "learned_skills_history": {},
+  "userId": "TestUser",
+  "document_caches": {},
+  "session_learning_times": {},
+  "exercise_messages": [],
+  "exercise_phase": null,
+  "exercise_plan": null,
+  "exercise_topic": null
+}

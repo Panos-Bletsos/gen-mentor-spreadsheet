@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gen-mentor-frontend"
+version = "0.1.0"
+description = "Streamlit frontend for GenMentor - interactive spreadsheet learning environment with AI tutor"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Panos Bletsos"}]
+
+dependencies = [
+    "streamlit==1.40.0",
+    "streamlit-card",
+    "streamlit-chat",
+    "streamlit-extras",
+    "streamlit-tags",
+    "st-pages==0.4.5",
+    "streamlit-float==0.3.5",
+    "streamlit-option-menu",
+    "streamlit-js-eval",
+    "streamlit-on-Hover-tabs",
+    "markdown",
+    "unidecode",
+    "extra-streamlit-components==0.1.60",
+    "deprecation==2.1.0",
+    "pdfplumber",
+    "httpx",
+    "pandas",
+    "plotly",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools]
+packages = ["main"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

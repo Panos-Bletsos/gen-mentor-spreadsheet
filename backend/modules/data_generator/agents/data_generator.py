@@ -47,11 +47,17 @@ class SyntheticSpreadsheetData(BaseModel):
     @model_validator(mode="after")
     def validate_row_width(self) -> "SyntheticSpreadsheetData":
         expected_width = len(self.headers)
+        fixed_rows = []
         for idx, row in enumerate(self.rows):
-            if len(row) != expected_width:
-                raise ValueError(
-                    f"Row at index {idx} has {len(row)} values, expected {expected_width}."
-                )
+            if len(row) > expected_width:
+                logger.warning("DATAGEN  row %d has %d values, truncating to %d", idx, len(row), expected_width)
+                fixed_rows.append(row[:expected_width])
+            elif len(row) < expected_width:
+                logger.warning("DATAGEN  row %d has %d values, padding to %d", idx, len(row), expected_width)
+                fixed_rows.append(row + [""] * (expected_width - len(row)))
+            else:
+                fixed_rows.append(row)
+        self.rows = fixed_rows
         return self
 
 

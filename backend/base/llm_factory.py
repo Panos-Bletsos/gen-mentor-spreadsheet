@@ -54,6 +54,14 @@ class LLMFactory:
         elif base_url is not None and model_provider == "openai":
             config_kwargs["api_key"] = "synthetic-key-for-vllm"
 
+        # Reasoning requires the OpenAI Responses API, not Chat Completions.
+        # Use the `reasoning` dict (not `reasoning_effort`) so summaries are returned.
+        if config_kwargs.get("reasoning_effort") and model_provider == "openai":
+            effort = config_kwargs.pop("reasoning_effort")
+            config_kwargs.setdefault("reasoning", {"effort": effort, "summary": "auto"})
+            config_kwargs.setdefault("use_responses_api", True)
+            config_kwargs.pop("temperature", None)
+
         try:
             llm = init_chat_model(**config_kwargs)
             logger.info("LLM initialized: provider=%s, model=%s", model_provider, model)
@@ -77,14 +85,19 @@ class LLMFactory:
         """
         config = ensure_config_dict(config)
         reasoning_effort = config.get("reasoning_effort", None)
+        model_provider = config.get("model_provider", "openai")
         extra = {}
         if reasoning_effort and reasoning_effort != "none":
-            extra["reasoning_effort"] = reasoning_effort
+            if model_provider == "openai":
+                extra["reasoning"] = {"effort": reasoning_effort, "summary": "auto"}
+                extra["use_responses_api"] = True
+            else:
+                extra["reasoning_effort"] = reasoning_effort
         else:
             extra["temperature"] = 0
         return init_chat_model(
             model=config.get("model_name", "gpt-4.1-nano"),
-            model_provider=config.get("model_provider", "openai"),
+            model_provider=model_provider,
             base_url=config.get("base_url", None),
             # api_key=config.api_key,
             **extra,

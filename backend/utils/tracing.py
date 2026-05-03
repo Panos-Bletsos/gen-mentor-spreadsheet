@@ -86,19 +86,33 @@ class SpanRecorder:
         self.input_messages = _serialize_messages(messages)
 
     def set_response(self, ai_message: Any) -> None:
-        self.raw_response = getattr(ai_message, "content", str(ai_message))
-        self.token_usage = _extract_token_usage(ai_message)
-        # Capture reasoning/thinking content if present (reasoning models)
-        content_blocks = getattr(ai_message, "content", None)
-        if isinstance(content_blocks, list):
-            reasoning_parts = [
-                b.get("reasoning") or b.get("text", "")
-                for b in content_blocks
-                if isinstance(b, dict) and b.get("type") == "reasoning"
+        content = getattr(ai_message, "content", str(ai_message))
+        # Flatten list content (Responses API returns blocks, not a plain string)
+        if isinstance(content, list):
+            text_parts = [
+                b.get("text", "") for b in content
+                if isinstance(b, dict) and b.get("type") in ("text", "output_text")
             ]
-            self.thinking = "\n\n".join(filter(None, reasoning_parts)) or None
+            self.raw_response = "".join(text_parts)
         else:
-            self.thinking = None
+            self.raw_response = content
+        self.token_usage = _extract_token_usage(ai_message)
+        # Capture reasoning content: Responses API exposes it via additional_kwargs
+        # or as "reasoning" blocks inside content list
+        thinking_parts: list[str] = []
+        if isinstance(content, list):
+            for b in content:
+                if not (isinstance(b, dict) and b.get("type") == "reasoning"):
+                    continue
+                # Responses API: {"type": "reasoning", "summary": [{"type": "summary_text", "text": "..."}]}
+                for summary_item in b.get("summary") or []:
+                    if isinstance(summary_item, dict) and summary_item.get("text"):
+                        thinking_parts.append(summary_item["text"])
+                # Fallback: direct text/reasoning key (other providers)
+                direct = b.get("text") or b.get("reasoning")
+                if direct and isinstance(direct, str):
+                    thinking_parts.append(direct)
+        self.thinking = "\n\n".join(filter(None, thinking_parts)) or None
 
     def set_parsed(self, output: Any) -> None:
         if hasattr(output, "model_dump"):

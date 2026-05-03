@@ -52,20 +52,32 @@ Output valid JSON only. No markdown, no code fences.
 """.strip()
 
 judge_quality_task_prompt = """
-Evaluate whether this generated spreadsheet data is appropriate for the exercise plan.
+Evaluate whether this generated data for the **{sheet_name}** sheet is appropriate.
 
-Exercise Plan:
+This is ONE sheet from a multi-sheet exercise. Other sheets are generated separately.
+Only evaluate the quality of this specific sheet's data — do NOT fail because other sheets are missing.
+
+Exercise Plan (for context):
 {exercise_plan}
 
-Generated Data:
+Sheet Being Evaluated: {sheet_name}
+Generated Data for This Sheet:
 {generated_data}
 
+Previously Generated Sheets (for referential integrity checks):
+{previous_sheets_data}
+
+IMPORTANT: In the exercise plan, each sheet has "prefilled" and "student_fills" columns.
+- "prefilled" columns should contain realistic data.
+- "student_fills" columns MUST be EMPTY (empty strings). These are left blank on purpose — the student will fill them with formulas during the exercise. Do NOT fail because student_fills columns are empty.
+
 Check:
-1. Does the data match the scenario described in the plan?
-2. Is the data realistic and diverse?
-3. Is the difficulty appropriate for a {difficulty} level exercise?
-4. Are there enough rows ({expected_rows} expected)?
-5. For multi-sheet exercises, is there referential integrity across sheets?
+1. Does the data match the scenario and this sheet's role in the plan?
+2. Is the data realistic and diverse for the PREFILLED columns?
+3. Are student_fills columns properly left empty?
+4. Is the difficulty appropriate for a {difficulty} level exercise?
+5. Are there enough rows ({expected_rows} expected)?
+6. If previous sheets exist, do shared key columns (e.g. Account_ID) use consistent values from those sheets?
 
 Output:
 {{"passed": true/false, "reason": "explanation if failed"}}

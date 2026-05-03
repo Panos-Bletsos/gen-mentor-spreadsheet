@@ -167,7 +167,7 @@ class AITutorChatbot(BaseAgent):
 			ai_response = model_with_tools.invoke(lang_messages)
 
 		# Extract conversational text + any tool calls
-		result = {"response": ai_response.content or "", "tool_calls": []}
+		result = {"response": ai_response.text or "", "tool_calls": []}
 		if ai_response.tool_calls:
 			for tc in ai_response.tool_calls:
 				result["tool_calls"].append({

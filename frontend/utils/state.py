@@ -111,7 +111,7 @@ def initialize_session_state():
         st.session_state["logged_in"] = False
 
     if "show_chatbot" not in st.session_state:
-        st.session_state["show_chatbot"] = True
+        st.session_state["show_chatbot"] = False
 
     if "tutor_messages" not in st.session_state:
         st.session_state["tutor_messages"] = []

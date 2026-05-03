@@ -13,6 +13,6 @@ server:
 
 llm:
   provider: openai
-  model_name: gpt-5.4-nano
+  model_name: gpt-5.4
   base_url: null
   reasoning_effort: low

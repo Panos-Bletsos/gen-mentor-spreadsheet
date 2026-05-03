@@ -65,10 +65,12 @@ def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: 
         context_parts.append(f"Leave these columns EMPTY (students will fill them): {student_fills}")
 
     if prev_sheets_data:
-        context_parts.append(f"Related sheets already generated: {json.dumps([s['name'] for s in prev_sheets_data])}")
-        context_parts.append("Ensure referential integrity with existing sheets.")
-    if retry_reason:
-        context_parts.append(f"Previous attempt was rejected: {retry_reason}. Fix this issue.")
+        prev_summary = []
+        for s in prev_sheets_data:
+            summary = {"name": s["name"], "headers": s.get("headers", []), "rows": s.get("rows", [])}
+            prev_summary.append(summary)
+        context_parts.append(f"Related sheets already generated: {json.dumps(prev_summary)}")
+        context_parts.append("Ensure referential integrity — where this sheet shares column names with related sheets, use the exact same values from those sheets.")
 
     return {
         "user_request": " ".join(context_parts),
@@ -133,12 +135,15 @@ def start_exercise_with_llm(
         # --- Step 1: Plan Exercise ---
         planner = ExercisePlanner(llm)
         with trace.span("ExercisePlanner", "step_1_plan") as rec:
-            messages = planner._build_messages(plan_input, task_prompt=exercise_planner_task_prompt)
-            rec.set_input(messages)
-            raw_result = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)
-            rec.set_response(raw_result["raw"])
-            exercise_plan: ExercisePlan = raw_result["parsed"]
-            rec.set_parsed(exercise_plan)
+            try:
+                messages = planner._build_messages(plan_input, task_prompt=exercise_planner_task_prompt)
+                rec.set_input(messages)
+                raw_result = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)
+                rec.set_response(raw_result["raw"])
+                exercise_plan: ExercisePlan = raw_result["parsed"]
+                rec.set_parsed(exercise_plan)
+            except Exception as e:
+                logger.exception("EXERCISE GENERATOR EXCEPTION", e)
 
         logger.info("EXERCISE plan created: difficulty=%s, sheets=%d, rows=%d", exercise_plan.difficulty, len(exercise_plan.sheets), exercise_plan.row_count)
 
@@ -182,7 +187,9 @@ def start_exercise_with_llm(
                 # Step 3: Judge quality
                 judge_input = {
                     "exercise_plan": exercise_plan.model_dump_json(),
+                    "sheet_name": sheet_dict["name"],
                     "generated_data": json.dumps(sheet_data),
+                    "previous_sheets_data": json.dumps(all_sheets_data) if all_sheets_data else "None",
                     "difficulty": exercise_plan.difficulty,
                     "expected_rows": exercise_plan.row_count,
                 }

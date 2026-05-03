@@ -292,7 +292,7 @@ def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_ty
         "model_provider": model_provider,
         "model_name": model_name,
     }
-    return make_post_request(API_NAMES["start_exercise"], data, timeout=180)
+    return make_post_request(API_NAMES["start_exercise"], data, timeout=300)
 
 
 def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):

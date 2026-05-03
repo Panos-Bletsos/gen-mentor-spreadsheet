@@ -33,10 +33,27 @@ def convert_json_output(output: str) -> Dict[str, Any]:
         else:
             raise json.JSONDecodeError("No valid JSON found in response", output, 0)
 
+def _content_to_str(content) -> str:
+    """Flatten a content value that may be a string or a list of content blocks."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                # output_text / text blocks
+                if block.get("type") in ("text", "output_text"):
+                    parts.append(block.get("text", ""))
+            elif isinstance(block, str):
+                parts.append(block)
+        return "".join(parts)
+    return str(content)
+
+
 def get_text_from_response(response):
     """Extract text from the response object."""
     if 'messages' in response:
-        return response['messages'][-1].content
+        return _content_to_str(response['messages'][-1].content)
     if 'message' in response['choices'][0]:
         return response['choices'][0]['message']['content']
     return response['choices'][0]['text']
