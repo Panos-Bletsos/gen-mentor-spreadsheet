@@ -1,0 +1,41 @@
+flowchart TD
+    Start([Start]) --> OB0
+
+    subgraph Onboarding
+        OB0["Onboarding\n(Card 0: Goal)"] -->|Next| OB1["Onboarding\n(Card 1: Information)"]
+    end
+
+    OB1 -->|Save & Continue| SG
+
+    subgraph Goal Setup
+        SG["Skill Gap Analysis\n(auto-triggers backend)"]
+    end
+
+    SG -->|Schedule Learning Path| LP
+
+    LP["Learning Path"]
+
+    LP -->|Select incomplete session| D{interactive_exercises?}
+    D -->|True — treatment| EX["Exercise\n(spreadsheet + AI tutor)"]
+    D -->|False — control| KD["Knowledge Document\n(read-only content)"]
+    LP -->|Select completed session| KD
+
+    EX -->|Finish Exercise\nsession marked complete| LP
+    KD -->|Back| LP
+    KD -->|Mark complete| LP
+
+    subgraph Sidebar["Sidebar (post-onboarding)"]
+        GM["Goal Management"]
+        PR["Learner Profile"]
+        DA["Dashboard"]
+        SH["Sheets (utility)"]
+    end
+
+    LP -.->|navigate| GM
+    LP -.->|navigate| PR
+    LP -.->|navigate| DA
+    LP -.->|navigate| SH
+    GM -->|Add / switch goal| LP
+
+    SG -.->|missing goal or info| OB0
+    LP -.->|not onboarded| OB0

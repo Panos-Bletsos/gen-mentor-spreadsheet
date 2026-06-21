@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Stop all services",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/scripts/stop_all.sh"],
+      "isBackground": false,
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

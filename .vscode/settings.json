@@ -1,0 +1,29 @@
+{
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.analysis.typeCheckingMode": "off",
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.*": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/venv": true,
+    "**/.venv": true,
+    "**/node_modules": true
+  }
+}

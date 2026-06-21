@@ -187,6 +187,8 @@ def render_loading():
             topic=topic,
             learner_profile=st.session_state.get("learner_profile", ""),
             brainstorming_history=st.session_state.get("exercise_messages", []),
+            extra_context=st.session_state.get("exercise_extra_context", ""),
+            skill_gaps=st.session_state.get("exercise_skill_gaps", []),
         )
 
     if result and "exercise_plan" in result:
@@ -339,6 +341,22 @@ def render_exercising():
 
 def render_completed():
     st.header("Exercise Complete!")
+
+    # Mark the originating learning-path session as completed (treatment cohort)
+    origin_session_id = st.session_state.get("exercise_origin_session_id")
+    if origin_session_id is not None:
+        goals = st.session_state.get("goals", [])
+        selected_goal_id = st.session_state.get("selected_goal_id", 0)
+        if goals and selected_goal_id < len(goals):
+            learning_path = goals[selected_goal_id].get("learning_path", [])
+            for session in learning_path:
+                if session.get("id") == origin_session_id:
+                    session["if_learned"] = True
+                    break
+        try:
+            save_persistent_state()
+        except Exception:
+            pass
 
     chat_container = st.container(height=500)
     with chat_container:

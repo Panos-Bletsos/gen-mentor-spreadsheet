@@ -1,0 +1,31 @@
+[     191ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8501/exercise/_stcore/health:0
+[     192ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8501/exercise/_stcore/host-config:0
+[     719ms] [ERROR] The page that you have requested does not seem to exist. Running the app's main page. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'ambient-light-sensor'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'battery'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'document-domain'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'layout-animations'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'legacy-image-formats'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'oversized-images'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'vr'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     742ms] [WARNING] Unrecognized feature: 'wake-lock'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     792ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[     822ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[   18617ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/health:0
+[   18617ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/host-config:0
+[   19122ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/health:0
+[   19122ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/host-config:0
+[   19629ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/health:0
+[   19629ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/host-config:0
+[   20740ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/health:0
+[   20740ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/host-config:0
+[   21751ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/health:0
+[   21751ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/host-config:0
+[   23707ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/health:0
+[   23708ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/host-config:0
+[   25984ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/health:0
+[   25984ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/host-config:0
+[   29877ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/health:0
+[   29877ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/_stcore/host-config:0
+[   34467ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/health:0
+[   34467ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8501/exercise/_stcore/host-config:0

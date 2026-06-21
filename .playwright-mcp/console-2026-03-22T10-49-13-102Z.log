@@ -1,0 +1,13 @@
+[     196ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8501/exercise/_stcore/health:0
+[     200ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8501/exercise/_stcore/host-config:0
+[     732ms] [ERROR] The page that you have requested does not seem to exist. Running the app's main page. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'ambient-light-sensor'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'battery'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'document-domain'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'layout-animations'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'legacy-image-formats'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'oversized-images'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'vr'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     756ms] [WARNING] Unrecognized feature: 'wake-lock'. @ http://localhost:8501/static/js/main.754d974e.js:9
+[     795ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[     816ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0

@@ -158,10 +158,47 @@ async def start_exercise(request: StartExerciseRequest):
             topic=request.topic,
             learner_profile=request.learner_profile,
             brainstorming_history=request.brainstorming_history,
+            extra_context=request.extra_context,
+            skill_gaps=request.skill_gaps,
         )
         return result
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@app.post("/derive-knowledge-points", response_model=DeriveKnowledgePointsResponse)
+async def derive_knowledge_points(request: DeriveKnowledgePointsRequest):
+    llm = get_llm()
+    learner_profile = request.learner_profile
+    learning_path = request.learning_path
+    learning_session = request.learning_session
+    if isinstance(learner_profile, str) and learner_profile.strip():
+        try:
+            learner_profile = ast.literal_eval(learner_profile)
+        except Exception:
+            learner_profile = {"raw": learner_profile}
+    if isinstance(learning_path, str) and learning_path.strip():
+        try:
+            learning_path = ast.literal_eval(learning_path)
+        except Exception:
+            learning_path = []
+    if isinstance(learning_session, str) and learning_session.strip():
+        try:
+            learning_session = ast.literal_eval(learning_session)
+        except Exception:
+            learning_session = {}
+    try:
+        result = explore_knowledge_points_with_llm(
+            llm,
+            learner_profile=learner_profile,
+            learning_path=learning_path,
+            learning_session=learning_session,
+        )
+        # explore_knowledge_points_with_llm returns {"knowledge_points": [...]}
+        kps = result.get("knowledge_points", []) if isinstance(result, dict) else []
+        return DeriveKnowledgePointsResponse(knowledge_points=kps)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/refine-learning-goal")
 async def refine_learning_goal(request: LearningGoalRefinementRequest):
@@ -379,9 +416,19 @@ async def draft_knowledge_points(request: KnowledgePointsDraftingRequest):
     use_search = request.use_search
     allow_parallel = request.allow_parallel
     try:
-        knowledge_drafts = draft_knowledge_points_with_llm(llm, learner_profile, learning_path, learning_session, knowledge_points, allow_parallel, use_search)
+        knowledge_drafts = draft_knowledge_points_with_llm(
+            llm,
+            learner_profile,
+            learning_path,
+            learning_session,
+            knowledge_points,
+            allow_parallel,
+            use_search,
+            search_rag_manager=search_rag_manager,
+        )
         return {"knowledge_drafts": knowledge_drafts}
     except Exception as e:
+        logger.exception("draft_knowledge_points failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/integrate-learning-document")
@@ -425,7 +472,8 @@ async def tailor_knowledge_content(request: TailoredContentGenerationRequest):
     with_quiz = request.with_quiz
     try:
         tailored_content = create_learning_content_with_llm(
-            llm, learner_profile, learning_path, learning_session, allow_parallel=allow_parallel, with_quiz=with_quiz, use_search=use_search
+            llm, learner_profile, learning_path, learning_session, allow_parallel=allow_parallel, with_quiz=with_quiz, use_search=use_search,
+            search_rag_manager=search_rag_manager,
         )
         return {"tailored_content": tailored_content}
     except Exception as e:

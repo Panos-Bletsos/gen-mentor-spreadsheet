@@ -1,13 +1,15 @@
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 python-multipart>=0.0.6
-langchain>=1.0.0
+langchain==1.0.0
 langchain-core==1.2.7
 langchain-community==1.0.0a1
-langchain-openai>=1.1.7
-langchain-chroma>=1.0.0
-langchain-huggingface>=1.0.0
-langchain-deepseek>=1.0.1
+langchain-openai==1.1.7
+langchain-chroma==1.0.0
+langchain-huggingface==1.0.0
+langchain-deepseek==1.0.1
+langgraph==1.0.10
+langgraph-prebuilt==1.0.10
 langchain-docling
 duckduckgo-search
 ddgs
@@ -15,6 +17,7 @@ sentence-transformers
 hydra-core
 beautifulsoup4
 pypdf
+PyPDF2
 pdfplumber
 pypinyin
 

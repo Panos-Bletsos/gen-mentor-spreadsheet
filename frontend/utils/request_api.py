@@ -23,6 +23,7 @@ API_NAMES = {
     "generate_document_quizzes": "generate-document-quizzes",
     "generate_synthetic_sheet_data": "generate-synthetic-sheet-data",
     "start_exercise": "start-exercise",
+    "derive_knowledge_points": "derive-knowledge-points",
 }
 
 
@@ -283,16 +284,31 @@ def generate_synthetic_sheet_data(
     return make_post_request(API_NAMES["generate_synthetic_sheet_data"], data)
 
 
-def start_exercise(topic, learner_profile="", brainstorming_history=None, llm_type=None):
+def start_exercise(topic, learner_profile="", brainstorming_history=None, extra_context="", skill_gaps=None, llm_type=None):
     model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "topic": topic,
         "learner_profile": str(learner_profile),
         "brainstorming_history": brainstorming_history or [],
+        "extra_context": extra_context,
+        "skill_gaps": skill_gaps or [],
         "model_provider": model_provider,
         "model_name": model_name,
     }
     return make_post_request(API_NAMES["start_exercise"], data, timeout=300)
+
+
+def derive_knowledge_points(learner_profile, learning_path, learning_session):
+    """Calls POST /derive-knowledge-points; returns List[KnowledgePoint] dicts."""
+    data = {
+        "learner_profile": str(learner_profile),
+        "learning_path": str(learning_path),
+        "learning_session": str(learning_session),
+    }
+    response = make_post_request(API_NAMES["derive_knowledge_points"], data)
+    if not response:
+        return []
+    return response.get("knowledge_points", [])
 
 
 def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):

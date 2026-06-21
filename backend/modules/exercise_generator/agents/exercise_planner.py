@@ -27,6 +27,34 @@ logger = logging.getLogger(__name__)
 MAX_JUDGE_RETRIES = 2
 
 
+def _build_skill_targets(skill_gaps: list | None, topic: Any) -> str:
+    """Format per-skill current→required deltas as a labeled block for the planner prompt.
+
+    Filters to gaps that are actual gaps (is_gap=True) so the planner focuses on
+    what still needs teaching. Falls back to all entries if none are flagged as gaps.
+    Returns a prose-friendly string; emits "(none provided)" when input is empty.
+    """
+    if not skill_gaps:
+        return "(none provided)"
+
+    # Prefer entries that are actual gaps; fall back to all if none flagged
+    gaps = [g for g in skill_gaps if g.get("is_gap", True)]
+    if not gaps:
+        gaps = skill_gaps
+
+    lines = []
+    for g in gaps:
+        name = g.get("name", "Unknown skill")
+        current = g.get("current_level", "unlearned")
+        required = g.get("required_level", "beginner")
+        reason = g.get("reason", "")
+        line = f"- {name}: currently {current} → needs {required}"
+        if reason:
+            line += f" ({reason})"
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def _topic_to_str(topic: Any) -> str:
     """Convert topic (str or dict/ExerciseTopic) to a descriptive string."""
     if isinstance(topic, str):
@@ -108,7 +136,8 @@ def start_exercise_with_llm(
     topic: Any,
     learner_profile: Any = "",
     brainstorming_history: list[dict] | None = None,
-
+    extra_context: str = "",
+    skill_gaps: list | None = None,
 ) -> dict:
     """Run the 4-step exercise generation chain.
 
@@ -118,17 +147,23 @@ def start_exercise_with_llm(
     topic_str = _topic_to_str(topic)
     logger.info("EXERCISE [Step 1/4] Planning exercise for topic: %.80s", topic_str)
 
-    brainstorming_context = ""
+    # Build the context block: label it as brainstorming history when present,
+    # otherwise pass the learning-path extra_context (session goals, KPs, outcomes).
+    context = ""
     if brainstorming_history:
-        brainstorming_context = "\n".join(
+        history_text = "\n".join(
             f"{m.get('role', 'user')}: {m.get('content', '')}"
             for m in brainstorming_history
         )
+        context = f"### Brainstorming History\n{history_text}"
+    if extra_context:
+        context = f"{context}\n\n{extra_context}".strip() if context else extra_context
 
     plan_input = {
         "topic": topic_str,
         "learner_profile": str(learner_profile),
-        "brainstorming_context": brainstorming_context,
+        "skill_targets": _build_skill_targets(skill_gaps, topic),
+        "context": context if context else "(none)",
     }
 
     with TraceSession("exercise_generation", metadata={"topic": topic_str}) as trace:

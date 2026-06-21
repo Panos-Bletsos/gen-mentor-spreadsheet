@@ -1,12 +1,48 @@
+"""
+Learning Path page for the GenMentor frontend.
+
+User flow
+---------
+1. Guard: redirect to onboarding if the user hasn't completed it, or if the
+   selected goal has no skill gaps yet (skill_gap page must run first).
+2. Auto-schedule: if the goal has no learning path yet, call the backend to
+   generate one (default 8 sessions) and persist the result.
+3. Display: once a path exists, show two sections:
+   - Overall information (current goal text, completion progress bar, skill
+     details expander).
+   - Session grid (2-column card layout, one card per session).
+4. Per-session actions:
+   - "Learning" button (incomplete sessions):
+       Treatment cohort  (config.interactive_exercises=True):
+           → derive_knowledge_points → session_to_exercise_topic
+           → exercise.py (interactive spreadsheet exercise)
+       Control cohort:
+           → knowledge_document.py (read-only content)
+   - "Completed" button (completed sessions): always goes to
+     knowledge_document.py for review.
+   - Completion toggle (currently disabled / read-only).
+5. Re-schedule expander: lets the user pick a new session count and trigger a
+   backend re-schedule while showing a spinner.
+"""
+
 import time
 import math
 import streamlit as st
+import config
 from components.skill_info import render_skill_info
-from utils.request_api import schedule_learning_path, reschedule_learning_path
+from utils.request_api import schedule_learning_path, reschedule_learning_path, derive_knowledge_points
+from utils.exercise_routing import session_to_exercise_topic
 from components.navigation import render_navigation
 from utils.state import save_persistent_state
 
 def render_learning_path():
+    """
+    Entry point for the Learning Path page.
+
+    Guards against accessing the page out of order, then either auto-schedules
+    a learning path if one doesn't exist yet, or delegates to the two sub-render
+    functions that build the UI.
+    """
     if not st.session_state.get("if_complete_onboarding"):
         st.switch_page("pages/onboarding.py")
 
@@ -45,6 +81,14 @@ def render_learning_path():
 
 
 def render_overall_information(goal):
+    """
+    Render the top summary card: goal text, progress bar, and skill details.
+
+    Args:
+        goal: The currently selected goal dict from session state.  Expected
+              keys: ``learning_goal``, ``learning_path`` (list of session
+              dicts with an ``if_learned`` bool), ``learner_profile``.
+    """
     with st.container(border=True):
         st.write("#### 🎯 Current Goal")
         st.text_area("In-progress Goal", value=goal["learning_goal"], disabled=True, help="Change this in the Goal Management section.")
@@ -69,6 +113,36 @@ def render_overall_information(goal):
             render_skill_info(goal["learner_profile"])
 
 def render_learning_sessions(goal):
+    """
+    Render the interactive session grid and re-schedule controls.
+
+    Builds a 2-column card grid where each card represents one learning session.
+    Each card shows the session title, an expandable abstract, a completion
+    toggle (read-only), and an action button.
+
+    Action button behaviour depends on two dimensions:
+    - Session completion state  (``session["if_learned"]``).
+    - A/B cohort flag           (``config.interactive_exercises``).
+
+    For incomplete sessions in the *treatment* cohort the button calls
+    ``derive_knowledge_points`` on the backend, constructs the exercise topic
+    via ``session_to_exercise_topic``, seeds exercise-related session-state
+    keys, and navigates to ``exercise.py``.  Backend errors are stored in a
+    per-session error key and surfaced inline on the next rerun rather than
+    blocking the spinner.
+
+    For the *control* cohort (or completed sessions) the button navigates to
+    ``knowledge_document.py``.
+
+    The re-schedule expander uses a two-rerun pattern to display a spinner:
+    the first click sets ``if_rescheduling_learning_path=True`` and calls
+    ``st.rerun()``, and on the following rerun the spinner is shown while the
+    actual API call runs.
+
+    Args:
+        goal: The currently selected goal dict from session state.  Expected
+              keys: ``learning_path`` (list of session dicts), ``learner_profile``.
+    """
     st.write("#### 📖 Learning Sessions")
     total_sessions = len(goal["learning_path"])
     with st.expander("Re-schedule Learning Path", expanded=False):
@@ -97,10 +171,14 @@ def render_learning_sessions(goal):
                 st.toast("🎉 Successfully re-schedule learning path!")
                 st.rerun()
     save_persistent_state()
+    # Build the full grid upfront so Streamlit registers all column contexts
+    # before any card content is written.  Each element of columns_list is a
+    # tuple of `columns_spec` st.delta_generator objects (one per column).
     columns_spec = 2
-    num_columns = math.ceil(len(goal["learning_path"]) / columns_spec)  
+    num_columns = math.ceil(len(goal["learning_path"]) / columns_spec)
     columns_list = [st.columns(columns_spec, gap="large") for _ in range(num_columns)]
     for sid, session in enumerate(goal["learning_path"]):
+        # Row index = sid // columns_spec; column index within that row = sid % columns_spec
         session_column = columns_list[sid // columns_spec]
         with session_column[sid % columns_spec]:
             with st.container(border=True):
@@ -111,7 +189,7 @@ def render_learning_sessions(goal):
                 with st.expander("View Session Details", expanded=False):
                     st.info(session["abstract"])
                     st.write("**Associated Skills & Desired Proficiency:**")
-                    for skill_outcome in session["desired_outcome_when_completed"]:
+                    for skill_outcome in session.get("desired_outcome_when_completed", []):
                         st.write(f"- {skill_outcome['name']} (`{skill_outcome['level']}`)")
 
                 col1, col2 = st.columns([5, 3])
@@ -129,11 +207,44 @@ def render_learning_sessions(goal):
                     if not session["if_learned"]:
                         start_key = f"start_{session['id']}_{session['if_learned']}"
                         if st.button("Learning", key=start_key, use_container_width=True, type="primary", icon=":material/local_library:"):
-                            st.session_state["selected_session_id"] = sid
-                            st.session_state["selected_point_id"] = 0
-                            st.session_state["selected_page"] = "Knowledge Document"
-                            save_persistent_state()
-                            st.switch_page("pages/knowledge_document.py")
+                            if config.interactive_exercises:
+                                # Treatment cohort (A/B test): derive knowledge points from the
+                                # backend and route to the interactive spreadsheet exercise page.
+                                error_key = f"exercise_error_{session['id']}"
+                                with st.spinner("Preparing exercise..."):
+                                    kps = derive_knowledge_points(
+                                        goal["learner_profile"],
+                                        goal["learning_path"],
+                                        session,
+                                    )
+                                if kps is None:
+                                    st.session_state[error_key] = "Failed to contact the backend. Please try again."
+                                    st.rerun()
+                                else:
+                                    topic_dict, extra_context_str = session_to_exercise_topic(
+                                        session,
+                                        goal["learner_profile"],
+                                        kps,
+                                    )
+                                    st.session_state["exercise_topic"] = topic_dict
+                                    st.session_state["exercise_phase"] = "loading"
+                                    st.session_state["exercise_origin_session_id"] = session["id"]
+                                    st.session_state["exercise_messages"] = []
+                                    st.session_state["exercise_extra_context"] = extra_context_str
+                                    st.session_state["exercise_skill_gaps"] = goal.get("skill_gaps", [])
+                                    save_persistent_state()
+                                    st.switch_page("pages/exercise.py")
+                            else:
+                                # Control cohort: navigate to read-only knowledge document.
+                                st.session_state["selected_session_id"] = sid
+                                st.session_state["selected_point_id"] = 0
+                                st.session_state["selected_page"] = "Knowledge Document"
+                                save_persistent_state()
+                                st.switch_page("pages/knowledge_document.py")
+                        # Show inline error for /derive-knowledge-points failures
+                        error_key = f"exercise_error_{session['id']}"
+                        if st.session_state.get(error_key):
+                            st.error(st.session_state.pop(error_key))
                     else:
                         start_key = f"start_{session['id']}_{session['if_learned']}"
                         if st.button("Completed", key=start_key, use_container_width=True, type="secondary", icon=":material/done_outline:"):

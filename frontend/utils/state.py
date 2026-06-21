@@ -34,6 +34,9 @@ PERSIST_KEYS = [
     "exercise_phase",
     "exercise_plan",
     "exercise_topic",
+    "exercise_origin_session_id",
+    "exercise_extra_context",
+    "exercise_skill_gaps",
 ]
 
 
@@ -125,6 +128,13 @@ def initialize_session_state():
         st.session_state["exercise_plan"] = None
     if "exercise_topic" not in st.session_state:
         st.session_state["exercise_topic"] = None
+    if "exercise_origin_session_id" not in st.session_state:
+        st.session_state["exercise_origin_session_id"] = None
+    if "exercise_extra_context" not in st.session_state:
+        st.session_state["exercise_extra_context"] = ""
+
+    if "exercise_skill_gaps" not in st.session_state:
+        st.session_state["exercise_skill_gaps"] = []
 
     if "selected_page" not in st.session_state:
         st.session_state["selected_page"] = "Onboarding"

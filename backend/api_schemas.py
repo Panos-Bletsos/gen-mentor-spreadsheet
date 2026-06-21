@@ -186,6 +186,18 @@ class StartExerciseRequest(BaseRequest):
     topic: Any  # str or dict (ExerciseTopic)
     learner_profile: Any = ""
     brainstorming_history: list = []
+    extra_context: str = ""
+    skill_gaps: list = []  # per-skill current→required deltas from skill gap analysis
+
+
+class DeriveKnowledgePointsRequest(BaseModel):
+    learner_profile: Any = ""
+    learning_path: Any = []
+    learning_session: Any = {}
+
+
+class DeriveKnowledgePointsResponse(BaseModel):
+    knowledge_points: list
 
 
 class ToolCallResult(BaseModel):

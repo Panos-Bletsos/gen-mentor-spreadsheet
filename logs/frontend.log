@@ -1,0 +1,1222 @@
+./scripts/start_frontend.sh: line 21: exec: streamlit: not found
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-03-22 12:37:50.917 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+2026-03-22 14:00:01.896 Port 8501 is already in use
+2026-03-22 14:08:05.696 Port 8501 is already in use
+2026-03-22 14:13:06.730 Port 8501 is already in use
+2026-03-26 20:15:27.924 Port 8501 is already in use
+2026-03-26 20:44:09.619 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 357, in <module>
+    render_exercise()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 354, in render_exercise
+    render_brainstorming()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 123, in render_brainstorming
+    display_text = reply.get("response", "")
+                   ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+2026-03-26 21:03:21.010 Port 8501 is already in use
+2026-03-26 21:04:33.458 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 357, in <module>
+    render_exercise()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 354, in render_exercise
+    render_brainstorming()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/exercise.py", line 123, in render_brainstorming
+    display_text = reply.get("response", "")
+                   ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+2026-03-26 21:07:14.832 Port 8501 is already in use
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-03-26 21:09:02.427 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/dashboard.py", line 152, in <module>
+    render_dashboard()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/dashboard.py", line 10, in render_dashboard
+    goal = st.session_state["goals"][st.session_state["selected_goal_id"]]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: list index out of range
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+  Stopping...
+  Stopping...
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1536, in _shutdown
+    atexit_call()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1507, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1094, in join
+    self._handle.join(timeout)
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/bootstrap.py", line 44, in signal_handler
+    server.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/server/server.py", line 417, in stop
+    self._runtime.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/runtime.py", line 324, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 878, in call_soon_threadsafe
+    self._check_closed()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-03-26 21:25:33.019 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+  Stopping...
+  Stopping...
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1536, in _shutdown
+    atexit_call()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1507, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1094, in join
+    self._handle.join(timeout)
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/bootstrap.py", line 44, in signal_handler
+    server.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/server/server.py", line 417, in stop
+    self._runtime.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/runtime.py", line 324, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 878, in call_soon_threadsafe
+    self._check_closed()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-22 20:57:21.277 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-04-22 20:57:22.942 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-22 21:17:37.215 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-04-22 21:17:38.072 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-23 22:40:45.534 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-04-23 22:40:46.768 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-23 23:04:08.779 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-04-23 23:04:13.713 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-23 23:09:15.269 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+  Stopping...
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1536, in _shutdown
+    atexit_call()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1507, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1094, in join
+    self._handle.join(timeout)
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/bootstrap.py", line 44, in signal_handler
+    server.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/server/server.py", line 417, in stop
+    self._runtime.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/runtime.py", line 324, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 878, in call_soon_threadsafe
+    self._check_closed()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-24 17:14:33.934 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-03 19:58:28.728 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+2026-05-03 19:58:32.560 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 48, in render_learning_content
+    document = learning_content["document"]
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+2026-05-03 19:58:50.725 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 48, in render_learning_content
+    document = learning_content["document"]
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+2026-05-03 19:59:40.842 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 48, in render_learning_content
+    document = learning_content["document"]
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+2026-05-03 20:00:56.074 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 180, in <module>
+    render_learning_path()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 46, in render_learning_path
+    render_learning_sessions(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 116, in render_learning_sessions
+    for skill_outcome in session["desired_outcome_when_completed"]:
+                         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'desired_outcome_when_completed'
+2026-05-03 20:01:08.361 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 180, in <module>
+    render_learning_path()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 46, in render_learning_path
+    render_learning_sessions(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 116, in render_learning_sessions
+    for skill_outcome in session["desired_outcome_when_completed"]:
+                         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'desired_outcome_when_completed'
+2026-05-03 20:01:11.557 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 180, in <module>
+    render_learning_path()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 46, in render_learning_path
+    render_learning_sessions(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/learning_path.py", line 116, in render_learning_sessions
+    for skill_outcome in session["desired_outcome_when_completed"]:
+                         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'desired_outcome_when_completed'
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-03 20:19:50.741 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-05-03 20:19:52.007 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-05 22:11:57.100 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+2026-05-05 22:12:28.997 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 48, in render_learning_content
+    document = learning_content["document"]
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+2026-05-05 22:12:30.512 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 48, in render_learning_content
+    document = learning_content["document"]
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-05 22:19:28.369 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-05-05 22:19:30.526 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 197, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 79, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-05 22:19:38.017 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 197, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 79, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-05 22:19:57.608 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 197, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 79, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-05 22:20:02.674 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/dashboard.py", line 156, in <module>
+    render_dashboard()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/dashboard.py", line 10, in render_dashboard
+    goal = st.session_state["goals"][st.session_state["selected_goal_id"]]
+           ~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "goals". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-05 22:20:03.753 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+2026-05-05 22:34:08.856 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 33, in render_learning_content
+    render_session_details(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 116, in render_session_details
+    st.session_state["document_caches"].pop(session_uid)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: '0-0'
+2026-05-05 22:34:10.077 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 33, in render_learning_content
+    render_session_details(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 116, in render_session_details
+    st.session_state["document_caches"].pop(session_uid)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: '0-0'
+2026-05-05 22:43:40.922 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 179, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 510, in <module>
+    render_learning_content()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 33, in render_learning_content
+    render_session_details(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/knowledge_document.py", line 116, in render_session_details
+    st.session_state["document_caches"].pop(session_uid)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: '0-0'
+!!!doucment_stru: {'title': 'Spreadsheet Foundations for Clean, Fast Data Organization', 'overview': 'This session introduces the core habits that make spreadsheets easy to use: understanding worksheet structure, entering data in a consistent table layout, formatting for readability, selecting ranges accurately, and organizing sheets with practical techniques like resizing columns and freezing headers. The goal is to help you quickly build clean trackers and logs that are ready for later work such as sorting, formulas, charts, and reporting.', 'summary': 'This session established the core setup skills behind effective spreadsheet use. The key idea is to treat a worksheet as structured data: rows are records, columns are fields, cells hold values, and ranges define the scope of actions. Clean spreadsheets use one header row, one record per row, one data type per column, and consistent labels and values. Formatting should improve readability through clear headers, proper number and date formats, alignment, and sensible column widths. Accurate cell and range selection prevents common mistakes, while resizing columns and freezing headers make tables easier to use. The main action item is to build a small task tracker and practice structuring, formatting, selecting, and organizing it cleanly.'}
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-05 22:48:10.561 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-05-05 22:51:17.553 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+  Stopping...
+  Stopping...
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1536, in _shutdown
+    atexit_call()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1507, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1094, in join
+    self._handle.join(timeout)
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/bootstrap.py", line 44, in signal_handler
+    server.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/server/server.py", line 417, in stop
+    self._runtime.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/runtime.py", line 324, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 878, in call_soon_threadsafe
+    self._check_closed()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-29 16:48:17.724 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-05-29 16:48:21.647 MediaFileHandler: Missing file 6999f7b1ad234c8c7f594cc991a94ce81b786dfa8ae373e3adbf8cf6.png
+2026-05-29 16:48:23.676 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 304, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 135, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-29 16:48:36.185 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 304, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 135, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-29 16:48:43.906 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 304, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 135, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-29 16:48:56.579 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 304, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 135, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-29 16:49:00.021 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 304, in <module>
+    render_onboard()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/onboarding.py", line 135, in render_onboard
+    render_topbar()
+    ~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/topbar.py", line 82, in render_topbar
+    if st.session_state["logged_in"]:
+       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "logged_in". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-29 16:49:31.524 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+2026-05-29 16:50:58.860 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 63, in render_identified_skill_gap
+    if levels.index(new_required_level) > levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])):
+       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:50:59.376 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:00.601 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 81, in render_identified_skill_gap
+    if levels.index(new_current_level) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:08.608 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:13.186 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:16.780 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:18.987 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 81, in render_identified_skill_gap
+    if levels.index(new_current_level) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:28.163 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+2026-05-29 16:51:46.734 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/main.py", line 207, in <module>
+    pg.run()
+    ~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/navigation/page.py", line 303, in run
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 79, in render_skill_gap
+    render_identified_skill_gap(goal)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/components/gap_identification.py", line 90, in render_identified_skill_gap
+    if levels.index(goal["skill_gaps"][skill_id].get("current_level", levels[0])) < levels.index(goal["skill_gaps"][skill_id].get("required_level", levels[0])):
+                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: None is not in list
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-05-29 16:52:14.065 Uncaught app exception
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 455, in __getitem__
+    return self._getitem(widget_id, key)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 500, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 113, in <module>
+    render_skill_gap()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/pages/skill_gap.py", line 60, in render_skill_gap
+    goal = st.session_state["to_add_goal"]
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state_proxy.py", line 100, in __getitem__
+    return get_session_state()[key]
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/safe_session_state.py", line 94, in __getitem__
+    return self._state[key]
+           ~~~~~~~~~~~^^^^^
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/state/session_state.py", line 457, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "to_add_goal". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+2026-05-29 16:52:15.993 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-06-21 20:15:26.410 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
