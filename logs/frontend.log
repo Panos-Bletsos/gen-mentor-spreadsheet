@@ -1235,3 +1235,38 @@ KeyError: 'st.session_state has no key "to_add_goal". Did you forget to initiali
   $ pip install watchdog
             
 2026-06-21 21:21:54.208 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+  Stopping...
+  Stopping...
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1536, in _shutdown
+    atexit_call()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1507, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/threading.py", line 1094, in join
+    self._handle.join(timeout)
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/bootstrap.py", line 44, in signal_handler
+    server.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/web/server/server.py", line 417, in stop
+    self._runtime.stop()
+  File "/Users/panosbletsos/repos/gen-mentor-spreadsheet/.claude/worktrees/interactive-learning-env/frontend/.venv/lib/python3.13/site-packages/streamlit/runtime/runtime.py", line 324, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 878, in call_soon_threadsafe
+    self._check_closed()
+  File "/Users/panosbletsos/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/base_events.py", line 556, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-06-21 22:11:35.029 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.

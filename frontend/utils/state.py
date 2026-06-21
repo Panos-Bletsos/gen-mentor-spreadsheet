@@ -33,6 +33,7 @@ PERSIST_KEYS = [
     "exercise_messages",
     "exercise_phase",
     "exercise_plan",
+    "exercise_id",
     "exercise_topic",
     "exercise_origin_session_id",
     "exercise_extra_context",
@@ -126,6 +127,8 @@ def initialize_session_state():
         st.session_state["exercise_phase"] = None
     if "exercise_plan" not in st.session_state:
         st.session_state["exercise_plan"] = None
+    if "exercise_id" not in st.session_state:
+        st.session_state["exercise_id"] = None
     if "exercise_topic" not in st.session_state:
         st.session_state["exercise_topic"] = None
     if "exercise_origin_session_id" not in st.session_state:

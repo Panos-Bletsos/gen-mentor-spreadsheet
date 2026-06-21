@@ -44,6 +44,51 @@ def _append_event(event: dict) -> None:
         f.flush()
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+# ---------------------------------------------------------------------------
+# Point-in-time event helpers (not wrapped in a TraceSession)
+# ---------------------------------------------------------------------------
+
+def log_user_message(exercise_id: str | None, content: str, mode: str) -> None:
+    """Record a student's chat turn in the exercise trace."""
+    if not exercise_id:
+        return
+    _append_event({
+        "event": "user_message",
+        "exercise_id": exercise_id,
+        "timestamp": _now_iso(),
+        "content": content,
+        "mode": mode,
+    })
+
+
+def log_sheet_snapshot(exercise_id: str | None, cell_values: Any) -> None:
+    """Record the current spreadsheet state (cell values 2-D grid) in the exercise trace."""
+    if not exercise_id or cell_values is None:
+        return
+    _append_event({
+        "event": "sheet_snapshot",
+        "exercise_id": exercise_id,
+        "timestamp": _now_iso(),
+        "cell_values": cell_values,
+    })
+
+
+def log_lifecycle(exercise_id: str | None, kind: str) -> None:
+    """Record an exercise lifecycle event (exercise_started / exercise_completed / exercise_abandoned)."""
+    if not exercise_id:
+        return
+    _append_event({
+        "event": "lifecycle",
+        "exercise_id": exercise_id,
+        "timestamp": _now_iso(),
+        "kind": kind,
+    })
+
+
 def _serialize_messages(messages: list) -> list[dict]:
     result = []
     for m in messages:
@@ -122,8 +167,8 @@ class SpanRecorder:
         else:
             self.parsed_output = str(output)[:5000]
 
-    def to_event(self, trace_id: str) -> dict:
-        return {
+    def to_event(self, trace_id: str, exercise_id: str | None = None) -> dict:
+        event: dict = {
             "event": "span",
             "trace_id": trace_id,
             "agent_name": self.agent_name,
@@ -137,27 +182,33 @@ class SpanRecorder:
             "raw_response": self.raw_response,
             "parsed_output": self.parsed_output,
         }
+        if exercise_id:
+            event["exercise_id"] = exercise_id
+        return event
 
 
 class TraceSession:
     """Context manager that groups agent spans into a trace and streams events to JSONL."""
 
-    def __init__(self, trace_type: str, metadata: dict | None = None) -> None:
+    def __init__(self, trace_type: str, metadata: dict | None = None, exercise_id: str | None = None) -> None:
         self.trace_id = str(uuid4())[:8]
         self.trace_type = trace_type
         self.metadata = metadata or {}
+        self.exercise_id = exercise_id
         self._spans: list[SpanRecorder] = []
         self._start_time = 0.0
 
     def __enter__(self) -> "TraceSession":
         self._start_time = time.time()
-        event = {
+        event: dict = {
             "event": "trace_start",
             "trace_id": self.trace_id,
             "trace_type": self.trace_type,
             "started_at": datetime.now(timezone.utc).isoformat(),
             "metadata": self.metadata,
         }
+        if self.exercise_id:
+            event["exercise_id"] = self.exercise_id
         _append_event(event)
         logger.info("TRACE    [%s] %s started", self.trace_id, self.trace_type)
         return self
@@ -170,7 +221,7 @@ class TraceSession:
             "total_tokens": sum(s.token_usage.get("total_tokens", 0) for s in self._spans),
         }
         success = exc_type is None
-        event = {
+        event: dict = {
             "event": "trace_end",
             "trace_id": self.trace_id,
             "trace_type": self.trace_type,
@@ -181,6 +232,8 @@ class TraceSession:
             "success": success,
             "error": str(exc_val) if exc_val else None,
         }
+        if self.exercise_id:
+            event["exercise_id"] = self.exercise_id
         _append_event(event)
         self._print_summary(total_duration, total_tokens, success)
         return False  # do not suppress exceptions
@@ -199,7 +252,7 @@ class TraceSession:
         finally:
             rec.duration_seconds = time.time() - rec._start_time
             self._spans.append(rec)
-            _append_event(rec.to_event(self.trace_id))
+            _append_event(rec.to_event(self.trace_id, self.exercise_id))
             self._print_span(rec)
 
     def _print_span(self, rec: SpanRecorder) -> None:

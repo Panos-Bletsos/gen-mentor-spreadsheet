@@ -16,6 +16,8 @@ class ChatWithAutorRequest(BaseRequest):
     learner_profile: str = ""
     mode: str = "general"
     exercise_context: Optional[dict] = None
+    exercise_id: Optional[str] = None
+    lifecycle: Optional[str] = None  # e.g. "exercise_completed"
 
 
 class LearningGoalRefinementRequest(BaseRequest):

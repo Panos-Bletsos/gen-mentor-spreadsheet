@@ -115,12 +115,15 @@ def _execute_pending_action(pending, plan, result):
     exercise_context = {"plan": plan, "sheet_snapshot": fresh_snapshot}
     learner_profile = st.session_state.get("learner_profile", "")
 
+    exercise_id = st.session_state.get("exercise_id")
+
     if action_type == "chat":
         reply = chat_with_tutor_exercise(
             st.session_state["exercise_messages"],
             learner_profile,
             mode="exercise",
             exercise_context=exercise_context,
+            exercise_id=exercise_id,
         )
         if reply:
             display_text = reply.get("response", "")
@@ -155,6 +158,8 @@ def _execute_pending_action(pending, plan, result):
             learner_profile,
             mode="exercise",
             exercise_context=exercise_context,
+            exercise_id=exercise_id,
+            lifecycle="exercise_completed",
         )
         if reply:
             feedback = reply.get("response", "")
@@ -188,6 +193,7 @@ def _reset_exercise():
     st.session_state["exercise_topic"] = None
     st.session_state["exercise_messages"] = []
     st.session_state["exercise_plan"] = None
+    st.session_state["exercise_id"] = None
     st.session_state["_snapshot_nonce"] = 0
     st.session_state["_last_snapshot_nonce"] = -1
     st.session_state["_last_sheet_snapshot"] = {}
@@ -308,6 +314,7 @@ def render_loading():
 
     if result and "exercise_plan" in result:
         st.session_state["exercise_plan"] = result
+        st.session_state["exercise_id"] = result.get("exercise_id")
         st.session_state["_sheet_data_version"] = 0
         st.session_state["exercise_messages"].append({
             "role": "assistant",

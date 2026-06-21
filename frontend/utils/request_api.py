@@ -311,7 +311,7 @@ def derive_knowledge_points(learner_profile, learning_path, learning_session):
     return response.get("knowledge_points", [])
 
 
-def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None):
+def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exercise_context=None, llm_type=None, exercise_id=None, lifecycle=None):
     model_provider, model_name = parse_llm_settings(llm_type)
     data = {
         "messages": str(chat_messages),
@@ -320,6 +320,8 @@ def chat_with_tutor_exercise(chat_messages, learner_profile, mode="general", exe
         "exercise_context": exercise_context,
         "model_provider": model_provider,
         "model_name": model_name,
+        "exercise_id": exercise_id,
+        "lifecycle": lifecycle,
     }
     print(f"== learner_profile=${learner_profile} ")
     response = make_post_request(API_NAMES["chat_with_tutor"], data)

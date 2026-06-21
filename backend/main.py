@@ -20,7 +20,7 @@ from modules.skill_gap_identification import *
 from modules.adaptive_learner_modeling import *
 from modules.personalized_resource_delivery import *
 from modules.ai_chatbot_tutor import chat_with_tutor_with_llm
-from utils.tracing import TraceSession
+from utils.tracing import TraceSession, log_lifecycle, log_user_message, log_sheet_snapshot
 from modules.data_generator import generate_synthetic_spreadsheet_data_with_llm
 from modules.exercise_generator import start_exercise_with_llm
 from api_schemas import *
@@ -117,13 +117,29 @@ async def list_llm_models():
 async def chat_with_autor(request: ChatWithAutorRequest):
     llm = get_llm(request.model_provider, request.model_name)
     learner_profile = request.learner_profile
+    ex_id = request.exercise_id or None
     try:
         if isinstance(request.messages, str) and request.messages.strip().startswith("["):
             converted_messages = ast.literal_eval(request.messages)
         else:
             return JSONResponse(status_code=400, content={"detail": "messages must be a JSON array string"})
+
+        # --- Emit end-to-end trace events for exercise chat ---
+        if request.mode == "exercise" and ex_id:
+            # Record the student's chat turn
+            last_user = next(
+                (str(m.get("content", "")).strip() for m in reversed(converted_messages)
+                 if isinstance(m, dict) and str(m.get("role", "")).lower() == "user"),
+                "",
+            )
+            log_user_message(ex_id, last_user, request.mode)
+            # Record the current sheet state
+            snap = (request.exercise_context or {}).get("sheet_snapshot") or {}
+            cell_values = snap.get("cell_values")
+            log_sheet_snapshot(ex_id, cell_values)
+
         if request.mode in ("brainstorming", "exercise"):
-            with TraceSession(f"{request.mode}_chat") as trace_session:
+            with TraceSession(f"{request.mode}_chat", exercise_id=ex_id) as trace_session:
                 result = chat_with_tutor_with_llm(
                     llm,
                     converted_messages,
@@ -144,6 +160,11 @@ async def chat_with_autor(request: ChatWithAutorRequest):
                 mode=request.mode,
                 exercise_context=request.exercise_context,
             )
+
+        # Emit lifecycle event after the LLM call (so timestamps are in order)
+        if ex_id and request.lifecycle:
+            log_lifecycle(ex_id, request.lifecycle)
+
         # result is {"response": str, "tool_calls": list[dict]}
         return result
     except Exception as e:
@@ -151,8 +172,11 @@ async def chat_with_autor(request: ChatWithAutorRequest):
 
 @app.post("/start-exercise")
 async def start_exercise(request: StartExerciseRequest):
+    from uuid import uuid4 as _uuid4
     llm = get_llm(request.model_provider, request.model_name)
+    exercise_id = str(_uuid4())[:8]
     try:
+        log_lifecycle(exercise_id, "exercise_started")
         result = start_exercise_with_llm(
             llm,
             topic=request.topic,
@@ -160,6 +184,7 @@ async def start_exercise(request: StartExerciseRequest):
             brainstorming_history=request.brainstorming_history,
             extra_context=request.extra_context,
             skill_gaps=request.skill_gaps,
+            exercise_id=exercise_id,
         )
         return result
     except Exception as e:

@@ -138,10 +138,11 @@ def start_exercise_with_llm(
     brainstorming_history: list[dict] | None = None,
     extra_context: str = "",
     skill_gaps: list | None = None,
+    exercise_id: Optional[str] = None,
 ) -> dict:
     """Run the 4-step exercise generation chain.
 
-    Returns dict with keys: exercise_plan, spreadsheet_data, tutor_message.
+    Returns dict with keys: exercise_id, exercise_plan, spreadsheet_data, tutor_message.
     """
     chain_start = time.time()
     topic_str = _topic_to_str(topic)
@@ -166,7 +167,7 @@ def start_exercise_with_llm(
         "context": context if context else "(none)",
     }
 
-    with TraceSession("exercise_generation", metadata={"topic": topic_str}) as trace:
+    with TraceSession("exercise_generation", metadata={"topic": topic_str}, exercise_id=exercise_id) as trace:
         # --- Step 1: Plan Exercise ---
         planner = ExercisePlanner(llm)
         with trace.span("ExercisePlanner", "step_1_plan") as rec:
@@ -275,6 +276,7 @@ def start_exercise_with_llm(
 
     logger.info("EXERCISE chain complete (%.1fs)", time.time() - chain_start)
     return {
+        "exercise_id": exercise_id,
         "exercise_plan": exercise_plan.model_dump(),
         "spreadsheet_data": spreadsheet_data,
         "tutor_message": tutor_message,
