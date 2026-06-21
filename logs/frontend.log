@@ -1220,3 +1220,18 @@ KeyError: 'st.session_state has no key "to_add_goal". Did you forget to initiali
   $ pip install watchdog
             
 2026-06-21 20:15:26.410 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.
+== learner_profile=$ 
+== learner_profile=$ 
+== learner_profile=$ 
+  Stopping...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-06-21 21:21:54.208 st.navigation was called in an app with a pages/ directory. This may cause unusual app behavior. You may want to rename the pages/ directory.

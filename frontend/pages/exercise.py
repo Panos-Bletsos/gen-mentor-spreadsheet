@@ -23,11 +23,18 @@ def _find_tool_call(tool_calls, tool_name):
     return None
 
 
-def _capture_sheet_snapshot():
+def _capture_sheet_snapshot(nonce):
     """Reach into the Univer iframe and grab the current workbook snapshot.
 
-    Returns a dict suitable for passing as sheet_snapshot to the tutor,
-    or {} if the snapshot cannot be captured.
+    The nonce determines the streamlit_js_eval component key — a new nonce forces the
+    browser to re-run the JS and return a fresh value. The return value on the *same*
+    render where the nonce first appears is always None (one-render lag); the actual
+    snapshot arrives on the next render.
+
+    Returns:
+        (snapshot_dict, is_live) where is_live=True means the value came from the
+        iframe and reflects the student's current edits. is_live=False means we fell
+        back to the session-state initial data.
     """
     js_code = """
     (function() {
@@ -47,17 +54,18 @@ def _capture_sheet_snapshot():
     try:
         raw = streamlit_js_eval(
             js_expressions=js_code,
-            key=f"sheet_snapshot_m{len(st.session_state.get('exercise_messages', []))}",
+            key=f"sheet_snapshot_{nonce}",
         )
         if raw and isinstance(raw, str):
             snapshot = json.loads(raw)
             cell_values = extract_cell_values(snapshot)
             if cell_values:
-                return {"cell_values": cell_values, "raw_snapshot": snapshot}
+                return {"cell_values": cell_values, "raw_snapshot": snapshot}, True
     except Exception:
         pass
 
-    # Fallback: reconstruct from session state spreadsheet data
+    # Fallback: reconstruct from session state spreadsheet data (reflects initial state
+    # only — no student edits — but is better than nothing if the iframe is unavailable)
     result = st.session_state.get("exercise_plan", {})
     spreadsheet_data = result.get("spreadsheet_data", {})
     sheets = spreadsheet_data.get("sheets", [])
@@ -68,8 +76,111 @@ def _capture_sheet_snapshot():
             headers = sheet.get("headers", [])
             rows = sheet.get("rows", [])
             fallback[name] = [headers] + rows
-        return {"cell_values": fallback, "source": "session_state"}
-    return {}
+        return {"cell_values": fallback, "source": "session_state"}, False
+    return {}, False
+
+
+def _mark_lesson_learned():
+    """Mark the originating learning-path session as completed, if applicable.
+
+    Only runs when the exercise was launched from a specific learning-path lesson
+    (exercise_origin_session_id is set). Brainstorming-started exercises skip this.
+    """
+    origin_session_id = st.session_state.get("exercise_origin_session_id")
+    if origin_session_id is None:
+        return
+    goals = st.session_state.get("goals", [])
+    selected_goal_id = st.session_state.get("selected_goal_id", 0)
+    if not goals or selected_goal_id >= len(goals):
+        return
+    learning_path = goals[selected_goal_id].get("learning_path", [])
+    for session in learning_path:
+        if session.get("id") == origin_session_id:
+            session["if_learned"] = True
+            break
+    try:
+        save_persistent_state()
+    except Exception:
+        pass
+
+
+def _execute_pending_action(pending, plan, result):
+    """Run the queued tutor action using the freshest available sheet snapshot.
+
+    Called once a fresh snapshot has arrived (or after the fallback timeout).
+    The caller wraps this in a spinner and calls st.rerun() afterward.
+    """
+    action_type = pending.get("type")
+    fresh_snapshot = st.session_state.get("_last_sheet_snapshot", {})
+    exercise_context = {"plan": plan, "sheet_snapshot": fresh_snapshot}
+    learner_profile = st.session_state.get("learner_profile", "")
+
+    if action_type == "chat":
+        reply = chat_with_tutor_exercise(
+            st.session_state["exercise_messages"],
+            learner_profile,
+            mode="exercise",
+            exercise_context=exercise_context,
+        )
+        if reply:
+            display_text = reply.get("response", "")
+            sheet_update = _find_tool_call(reply.get("tool_calls", []), "SheetUpdate")
+            st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
+            if sheet_update:
+                st.session_state["exercise_plan"]["spreadsheet_data"] = sheet_update
+                st.session_state["_sheet_data_version"] = (
+                    st.session_state.get("_sheet_data_version", 0) + 1
+                )
+        else:
+            st.session_state["exercise_messages"].append({
+                "role": "assistant",
+                "content": "I'm having trouble connecting. Please try again.",
+            })
+
+    elif action_type == "finish":
+        # Build a transient instruction message — sent to the backend but never
+        # persisted into exercise_messages (so no "[SYSTEM]" bubble in the chat).
+        finish_instruction = {
+            "role": "user",
+            "content": (
+                "[SYSTEM] The student has finished the exercise. "
+                "Please summarize their performance: what they did well, "
+                "what they struggled with, and what to practice next."
+            ),
+        }
+        transient_msgs = st.session_state["exercise_messages"] + [finish_instruction]
+
+        reply = chat_with_tutor_exercise(
+            transient_msgs,
+            learner_profile,
+            mode="exercise",
+            exercise_context=exercise_context,
+        )
+        if reply:
+            feedback = reply.get("response", "")
+            if feedback:
+                st.session_state["exercise_messages"].append(
+                    {"role": "assistant", "content": feedback}
+                )
+
+        # Mark the originating lesson as learned (no-op for brainstorming exercises)
+        _mark_lesson_learned()
+
+        # Update learner profile — pass the conversation directly; no brittle
+        # "extract JSON from LLM" round-trip.
+        try:
+            session_info = {
+                "type": "exercise",
+                "topic": str(st.session_state.get("exercise_topic", "")),
+                "scenario": plan.get("scenario", ""),
+            }
+            update_learner_profile(
+                learner_profile,
+                str(st.session_state.get("exercise_messages", [])),
+                session_information=str(session_info),
+            )
+        except Exception:
+            pass
 
 
 def _reset_exercise():
@@ -77,6 +188,11 @@ def _reset_exercise():
     st.session_state["exercise_topic"] = None
     st.session_state["exercise_messages"] = []
     st.session_state["exercise_plan"] = None
+    st.session_state["_snapshot_nonce"] = 0
+    st.session_state["_last_snapshot_nonce"] = -1
+    st.session_state["_last_sheet_snapshot"] = {}
+    st.session_state["_pending_tutor_action"] = None
+    st.session_state["_snapshot_wait_count"] = 0
 
 
 def get_exercise_phase():
@@ -121,7 +237,6 @@ def render_brainstorming():
         with chat_container:
             for msg in st.session_state["exercise_messages"]:
                 st.chat_message(msg["role"]).write(msg["content"])
-
 
         st.empty()
         if prompt := st.chat_input("Tell me what you want to practice..."):
@@ -216,6 +331,23 @@ def render_exercising():
     plan = result.get("exercise_plan", {})
     spreadsheet_data = result.get("spreadsheet_data", {})
 
+    # --- Snapshot capture ---
+    # Must be called on EVERY render so the streamlit_js_eval component stays mounted.
+    # When the nonce is new, the browser re-runs the JS; the value arrives one render
+    # later. Until then (is_live=False) we keep the last known good snapshot.
+    nonce = st.session_state.get("_snapshot_nonce", 0)
+    snapshot, is_live = _capture_sheet_snapshot(nonce)
+
+    if is_live:
+        # Fresh live value from the iframe — store it and mark the nonce as satisfied.
+        st.session_state["_last_sheet_snapshot"] = snapshot
+        st.session_state["_last_snapshot_nonce"] = nonce
+        st.session_state["_snapshot_wait_count"] = 0
+    elif snapshot and not st.session_state.get("_last_sheet_snapshot"):
+        # Fallback only used when we have no prior snapshot at all.
+        st.session_state["_last_sheet_snapshot"] = snapshot
+
+    # --- Layout ---
     left_col, right_col = st.columns([1.5, 1], gap="large")
 
     with left_col:
@@ -234,12 +366,6 @@ def render_exercising():
         else:
             st.warning("No spreadsheet data available.")
 
-    # Capture the sheet snapshot on every render (outside chat input block)
-    # so streamlit_js_eval doesn't trigger a rerun inside the conditional.
-    sheet_snapshot = _capture_sheet_snapshot()
-    if sheet_snapshot:
-        st.session_state["_last_sheet_snapshot"] = sheet_snapshot
-
     with right_col:
         st.subheader("AI Tutor")
 
@@ -248,120 +374,46 @@ def render_exercising():
             for msg in st.session_state["exercise_messages"]:
                 st.chat_message(msg["role"]).write(msg["content"])
 
-        if prompt := st.chat_input("Ask about this exercise..."):
-            st.session_state["exercise_messages"].append({"role": "user", "content": prompt})
+        pending = st.session_state.get("_pending_tutor_action")
 
-            exercise_context = {
-                "plan": plan,
-                "sheet_snapshot": st.session_state.get("_last_sheet_snapshot", {}),
-            }
+        if pending is not None:
+            # A user action is queued. Check whether a fresh snapshot for the current
+            # nonce has arrived (is_live + nonce matches). If so, run the action now.
+            # If not, wait — streamlit_js_eval will trigger another rerun when the
+            # browser responds. After 3 waits with no live value, fall back to the last
+            # known snapshot to avoid an infinite wait if the iframe is unavailable.
+            fresh_nonce_ready = (
+                st.session_state.get("_last_snapshot_nonce") == nonce and is_live
+            )
+            wait_count = st.session_state.get("_snapshot_wait_count", 0)
 
-            with st.spinner("Thinking..."):
-                reply = chat_with_tutor_exercise(
-                    st.session_state["exercise_messages"],
-                    st.session_state.get("learner_profile", ""),
-                    mode="exercise",
-                    exercise_context=exercise_context,
-                )
-
-            if reply:
-                display_text = reply.get("response", "")
-                sheet_update = _find_tool_call(reply.get("tool_calls", []), "SheetUpdate")
-                st.session_state["exercise_messages"].append({"role": "assistant", "content": display_text})
-                if sheet_update:
-                    st.session_state["exercise_plan"]["spreadsheet_data"] = sheet_update
-                    st.session_state["_sheet_data_version"] = st.session_state.get("_sheet_data_version", 0) + 1
+            if fresh_nonce_ready or wait_count >= 3:
+                with st.spinner("Thinking..."):
+                    _execute_pending_action(pending, plan, result)
+                st.session_state["_pending_tutor_action"] = None
+                st.session_state["_snapshot_wait_count"] = 0
+                st.rerun()
             else:
-                st.session_state["exercise_messages"].append({
-                    "role": "assistant",
-                    "content": "I'm having trouble connecting. Please try again.",
-                })
+                st.session_state["_snapshot_wait_count"] = wait_count + 1
+                st.info("Capturing spreadsheet state...")
+        else:
+            if prompt := st.chat_input("Ask about this exercise..."):
+                st.session_state["exercise_messages"].append({"role": "user", "content": prompt})
+                # Queue the action and bump the nonce so a fresh snapshot is captured
+                # before the tutor call goes out.
+                st.session_state["_pending_tutor_action"] = {"type": "chat", "prompt": prompt}
+                st.session_state["_snapshot_nonce"] = nonce + 1
+                st.session_state["_snapshot_wait_count"] = 0
+                st.rerun()
 
-            st.rerun()
-
-        # Finish exercise button
+        # Finish exercise — stays live and idempotent so the student can re-finish
+        # after further edits. Feedback appears as a normal assistant message.
         st.divider()
-        if st.button("Finish Exercise", type="primary"):
-            st.session_state["exercise_messages"].append({
-                "role": "user",
-                "content": "[SYSTEM] The student has finished the exercise. Please summarize their performance: what they did well, what they struggled with, and what to practice next.",
-            })
-            with st.spinner("Generating feedback..."):
-                exercise_context = {
-                    "plan": plan,
-                    "sheet_snapshot": st.session_state.get("_last_sheet_snapshot", {}),
-                }
-                reply = chat_with_tutor_exercise(
-                    st.session_state["exercise_messages"],
-                    st.session_state.get("learner_profile", ""),
-                    mode="exercise",
-                    exercise_context=exercise_context,
-                )
-
-            if reply:
-                st.session_state["exercise_messages"].append({"role": "assistant", "content": reply.get("response", "")})
-
-            # Update learner profile with performance data
-            with st.spinner("Updating your learner profile..."):
-                perf_reply = chat_with_tutor_exercise(
-                    st.session_state["exercise_messages"] + [
-                        {"role": "user", "content": '[SYSTEM] Output a JSON performance summary: {"skills_practiced": [...], "completed_steps": N, "total_steps": N, "struggled_with": [...], "hints_requested": N}'}
-                    ],
-                    st.session_state.get("learner_profile", ""),
-                    mode="exercise",
-                    exercise_context=exercise_context,
-                )
-                if perf_reply:
-                    # Try to parse the response text as JSON for performance data
-                    perf_text = perf_reply.get("response", "")
-                    try:
-                        perf_data = json.loads(perf_text)
-                    except (json.JSONDecodeError, TypeError):
-                        perf_data = {}
-                    if perf_data:
-                        session_info = {
-                            "type": "exercise",
-                            "topic": str(st.session_state.get("exercise_topic", "")),
-                            "scenario": plan.get("scenario", ""),
-                            "performance": perf_data,
-                        }
-                        update_learner_profile(
-                            st.session_state.get("learner_profile", ""),
-                            str(st.session_state.get("exercise_messages", [])),
-                            session_information=str(session_info),
-                        )
-
-            st.session_state["exercise_phase"] = "completed"
+        if st.button("Finish Exercise", type="primary", disabled=(pending is not None)):
+            st.session_state["_pending_tutor_action"] = {"type": "finish"}
+            st.session_state["_snapshot_nonce"] = nonce + 1
+            st.session_state["_snapshot_wait_count"] = 0
             st.rerun()
-
-
-# ---------------------------------------------------------------------------
-# Phase: Completed
-# ---------------------------------------------------------------------------
-
-def render_completed():
-    st.header("Exercise Complete!")
-
-    # Mark the originating learning-path session as completed (treatment cohort)
-    origin_session_id = st.session_state.get("exercise_origin_session_id")
-    if origin_session_id is not None:
-        goals = st.session_state.get("goals", [])
-        selected_goal_id = st.session_state.get("selected_goal_id", 0)
-        if goals and selected_goal_id < len(goals):
-            learning_path = goals[selected_goal_id].get("learning_path", [])
-            for session in learning_path:
-                if session.get("id") == origin_session_id:
-                    session["if_learned"] = True
-                    break
-        try:
-            save_persistent_state()
-        except Exception:
-            pass
-
-    chat_container = st.container(height=500)
-    with chat_container:
-        for msg in st.session_state["exercise_messages"]:
-            st.chat_message(msg["role"]).write(msg["content"])
 
 
 # ---------------------------------------------------------------------------
@@ -376,8 +428,6 @@ def render_exercise():
         render_loading()
     elif phase == "exercising":
         render_exercising()
-    elif phase == "completed":
-        render_completed()
     else:
         render_brainstorming()
 
