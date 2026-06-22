@@ -9,6 +9,7 @@ Your role is to design a single, pedagogically sound spreadsheet exercise tailor
 4.  **Ground the Scenario**: The scenario MUST be realistic and directly tied to the learner's `domain` (occupation/field). A learner in finance should see financial data; a learner in HR should see HR data. Generic "sales data" is acceptable only as a last resort.
 5.  **Calibrate Difficulty**: Set `difficulty` to match the `current_level → required_level` gap, not just the required level. A beginner→intermediate gap warrants more scaffolding and smaller `row_count` than an intermediate→advanced gap.
 6.  **Hints Guide, Not Solve**: Each step's `hint` must point the student toward the right approach without giving the formula directly (e.g., "Think about which function counts cells that meet a condition" not "Use COUNTIF").
+7. **Declare Every Reference (Crucial)**: Every cell address your `expected_formula_template` references MUST exist in the generated spreadsheet. If a formula needs an off-grid constant (like a rate or multiplier stored in one cell), declare it in that sheet's `constants` list — never reference an address that falls outside the grid or constants. A formula like `E{row}=D{row}*$H$2` is only valid if `H2` is in `constants`. Ensure all arithmetic operands are numeric: multiplier grids must have numeric values in header/base cells, not text column names.
 
 **Final Output Format**:
 Your output MUST be a valid JSON object matching the exact structure below.
@@ -40,7 +41,10 @@ Output a JSON object with this exact structure:
             "columns": ["Col1", "Col2", ...],
             "prefilled": ["Col1", ...],
             "student_fills": ["Col2", ...],
-            "expected_formula_template": "e.g. SUM(A{{row}}:C{{row}})"
+            "expected_formula_template": "e.g. SUM(A{{row}}:C{{row}})",
+            "constants": [
+                {{"cell": "H2", "label": "Overhead Rate", "label_cell": "H1"}}
+            ]
         }}
     ],
     "steps": [
@@ -57,6 +61,9 @@ Rules:
 - `expected_formula_template` uses {{row}} as a placeholder for the row number (e.g. "SUMIF(A:A,E{{row}},C:C)").
 - Keep `row_count` between 5 and 20; prefer lower counts for beginner gaps to reduce cognitive load.
 - Use "all" in `prefilled` only if every column in that sheet is pre-populated.
+- `constants` lists OFF-GRID constant cells that formulas reference. Each constant needs a `cell` (A1 address of the value), a `label` (human-readable name), and optionally a `label_cell` (A1 address to print the label). Set `constants: []` if no off-grid constants are used.
+- REF-CLOSURE RULE: Every cell address referenced in `expected_formula_template` (after stripping `$`) must be EITHER: (a) a column in `columns` at a known grid position, OR (b) declared in `constants`, OR (c) another answer cell in `student_fills`. Formulas must NEVER reference an address that doesn't exist in the grid or constants list.
+- NUMERIC OPERANDS RULE: Every operand in an arithmetic formula (`*`, `/`, `+`, `-`) must resolve to a numeric value at runtime. String values cannot be multiplied or divided. Prefilled columns used as arithmetic operands must contain numbers. Multiplier grids (e.g. Dev/Stage/Prod) must have numeric values in their header row or a numeric base column — not text labels.
 """.strip()
 
 
@@ -122,6 +129,7 @@ Learner Profile:
 Generated Data Summary:
 - Sheets: {sheet_names}
 - Columns per sheet: {columns_summary}
+- Constants per sheet: {constants_summary}
 
 Write 2-4 paragraphs:
 1. Set the scene (the scenario)
