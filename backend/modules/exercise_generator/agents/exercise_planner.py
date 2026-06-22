@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
+import math
+import re
 import time
 from typing import Any, Optional
 
@@ -83,6 +85,123 @@ def _format_correction(judge_result: "JudgeQualityResult") -> str:
     return "\n".join(lines)
 
 
+def _col_index_to_letter(index: int) -> str:
+    """Convert 0-based column index to spreadsheet column letter(s). 0='A', 25='Z', 26='AA', etc."""
+    result = ""
+    n = index + 1  # 1-based
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        result = chr(ord('A') + remainder) + result
+    return result
+
+
+def _check_solvability(sheet_plan_dict: dict, sheet_data_dict: dict) -> tuple[bool, str]:
+    """
+    Check that expected_formula_template resolves to finite numerics for all student rows.
+
+    Returns (passed: bool, error_message: str).
+    """
+    import formulas
+
+    template = sheet_plan_dict.get("expected_formula_template", "")
+    if not template:
+        return (True, "")
+
+    student_fills = sheet_plan_dict.get("student_fills", [])
+    if not student_fills:
+        return (True, "")
+
+    columns = sheet_plan_dict.get("columns", [])
+    cells = sheet_data_dict.get("cells", {})
+
+    # Find max row index in cells (excluding row 1 which is the header)
+    max_row = 1
+    for key in cells:
+        m = re.match(r'^([A-Z]+)([0-9]+)$', key.upper())
+        if m:
+            row_num = int(m.group(2))
+            if row_num > max_row:
+                max_row = row_num
+
+    if max_row < 2:
+        # No data rows
+        return (True, "")
+
+    # Build student_col_letters: set of column letters for student_fills columns
+    student_col_letters = set()
+    for col_name in student_fills:
+        if col_name in columns:
+            idx = columns.index(col_name)
+            student_col_letters.add(_col_index_to_letter(idx))
+
+    # Prepare cells dict with uppercased keys for fast lookup
+    cells_upper = {k.upper(): v for k, v in cells.items()}
+
+    for row in range(2, max_row + 1):
+        for clause in template.split(";"):
+            clause = clause.strip()
+            if not clause:
+                continue
+
+            # Split on first '=' to get lhs and rhs
+            eq_idx = clause.find("=")
+            if eq_idx == -1:
+                continue
+            lhs = clause[:eq_idx]
+            rhs = clause[eq_idx + 1:]
+
+            # Substitute {row} with current row number
+            lhs_subst = lhs.replace("{row}", str(row)).strip().upper()
+            rhs_subst = rhs.replace("{row}", str(row))
+
+            target_cell = lhs_subst
+            formula_str = "=" + rhs_subst
+
+            # Check if target_cell is in a student-fill column
+            # Extract the column letter(s) from the target cell address
+            m = re.match(r'^([A-Z]+)([0-9]+)$', target_cell)
+            if not m:
+                continue
+            target_col = m.group(1)
+            if target_col not in student_col_letters:
+                # This clause is for a prefilled column or another sheet — skip
+                continue
+
+            # Structural check: find all cell references in the formula
+            refs = re.findall(r'\$?([A-Z]+)\$?([0-9]+)', formula_str.upper())
+            has_student_fill_ref = False
+            for ref_col, ref_row_str in refs:
+                ref_addr = ref_col + ref_row_str
+                if ref_addr not in cells_upper:
+                    # Check if this is another student-fill column
+                    if ref_col in student_col_letters:
+                        has_student_fill_ref = True
+                        # Allowed: it's a student-computed cell from another row/column
+                    else:
+                        return (False, f"Structural: formula '{formula_str}' references cell '{ref_addr}' which is not in the generated data")
+
+            # Evaluation: if the formula references other student-fill cells, skip evaluation
+            if has_student_fill_ref:
+                continue
+
+            try:
+                parser = formulas.Parser()
+                func = parser.ast(formula_str)[1].compile()
+                # Only pass the inputs the compiled function actually needs
+                needed = set(func.inputs.keys())
+                inputs = {addr: [[cells_upper[addr]]] for addr in needed if addr in cells_upper}
+                result = func(**inputs)
+                value = result.tolist()[0][0]
+            except Exception as e:
+                return (False, f"Evaluation: formula '{formula_str}' in cell '{target_cell}' (row {row}) raised exception: {e!r}")
+
+            # Check for non-finite numeric result
+            if isinstance(value, str) or not (isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)):
+                return (False, f"Evaluation: formula '{formula_str}' in cell '{target_cell}' (row {row}) returned non-numeric result: {value!r}")
+
+    return (True, "")
+
+
 def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: list[dict], retry_reason: str = "") -> dict:
     """Build a data_generator payload from the exercise plan + one sheet."""
     all_columns = sheet_plan.get("columns", [])
@@ -103,10 +222,7 @@ def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: 
         context_parts.append(f"Leave these columns EMPTY (students will fill them): {student_fills}")
 
     if prev_sheets_data:
-        prev_summary = []
-        for s in prev_sheets_data:
-            summary = {"name": s["name"], "headers": s.get("headers", []), "rows": s.get("rows", [])}
-            prev_summary.append(summary)
+        prev_summary = [{"name": s["name"], "cells": s.get("cells", {})} for s in prev_sheets_data]
         context_parts.append(f"Related sheets already generated: {json.dumps(prev_summary)}")
         context_parts.append("Ensure referential integrity — where this sheet shares column names with related sheets, use the exact same values from those sheets.")
 
@@ -181,108 +297,179 @@ def start_exercise_with_llm(
     with TraceSession("exercise_generation", metadata={"topic": topic_str}, exercise_id=exercise_id) as trace:
         # --- Step 1: Plan Exercise ---
         planner = ExercisePlanner(llm)
-        with trace.span("ExercisePlanner", "step_1_plan") as rec:
-            try:
-                messages = planner._build_messages(plan_input, task_prompt=exercise_planner_task_prompt)
-                rec.set_input(messages)
-                raw_result = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)
-                rec.set_response(raw_result["raw"])
-                exercise_plan: ExercisePlan = raw_result["parsed"]
-                rec.set_parsed(exercise_plan)
-            except Exception as e:
-                logger.exception("EXERCISE GENERATOR EXCEPTION", e)
+        exercise_plan: ExercisePlan = None  # type: ignore
 
+        def _run_planner(extra_ctx: str = "") -> ExercisePlan:
+            """Run ExercisePlanner, optionally with extra retry context appended."""
+            pi = dict(plan_input)
+            if extra_ctx:
+                pi["context"] = (pi["context"] + "\n\n" + extra_ctx).strip()
+            with trace.span("ExercisePlanner", "step_1_plan") as rec:
+                try:
+                    messages = planner._build_messages(pi, task_prompt=exercise_planner_task_prompt)
+                    rec.set_input(messages)
+                    raw_result = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)
+                    rec.set_response(raw_result["raw"])
+                    ep: ExercisePlan = raw_result["parsed"]
+                    rec.set_parsed(ep)
+                    return ep
+                except Exception as e:
+                    logger.exception("EXERCISE GENERATOR EXCEPTION", e)
+                    raise
+
+        exercise_plan = _run_planner()
         logger.info("EXERCISE plan created: difficulty=%s, sheets=%d, rows=%d", exercise_plan.difficulty, len(exercise_plan.sheets), exercise_plan.row_count)
 
-        # --- Step 2 & 3: Generate Data + Judge Quality (with retry loop) ---
-        logger.info("EXERCISE [Step 2/4] Generating data + quality judging")
+        # --- Step 2 & 3 & 4: Generate Data + Judge Quality + Solvability Gate ---
+        logger.info("EXERCISE [Step 2/4] Generating data + quality judging + solvability")
         all_sheets_data = []
         quality_records: list[dict] = []  # per-sheet quality history for trace + returned data
         judge = QualityJudge(llm)
 
-        for sheet_plan in exercise_plan.sheets:
-            sheet_dict = sheet_plan.model_dump() if hasattr(sheet_plan, "model_dump") else dict(sheet_plan)
-            prefilled = sheet_dict.get("prefilled", [])
-            # Skip sheets with no prefilled data — count as not-judged (quality_passed=True)
-            if not prefilled:
-                all_sheets_data.append({"name": sheet_dict["name"], "headers": sheet_dict.get("columns", []), "rows": [], "quality_passed": True, "quality_reason": ""})
-                quality_records.append({"name": sheet_dict["name"], "final_passed": True, "judged": False, "attempts": []})
-                continue
+        # Outer re-plan loop: re-run the planner on structural solvability failures
+        for re_plan_attempt in range(2):
+            if re_plan_attempt > 0:
+                logger.info("EXERCISE re-plan attempt %d triggered", re_plan_attempt)
 
-            logger.info("EXERCISE generating data for sheet '%s'", sheet_dict["name"])
-            retry_reason = ""
-            sheet_data = None
-            sheet_attempts: list[dict] = []
-            final_passed = False
-            for attempt in range(1 + MAX_JUDGE_RETRIES):
-                # Step 2: Generate data
-                data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, retry_reason)
-                step_label = f"step_2_data_{sheet_dict['name']}_attempt_{attempt + 1}"
-                try:
-                    with trace.span("SyntheticDataGenerator", step_label) as rec:
-                        sheet_data = generate_with_tracing(
-                            llm,
-                            user_request=data_request["user_request"],
-                            row_count=data_request["row_count"],
-                            columns=data_request["columns"],
-                            constraints=data_request["constraints"],
-                            recorder=rec,
-                        )
-                except (ValueError, Exception) as e:
-                    retry_reason = str(e)
-                    logger.warning("EXERCISE data generation FAILED for sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
-                    if attempt == MAX_JUDGE_RETRIES:
+            all_sheets_data = []
+            quality_records = []
+            trigger_replan = False
+            replan_reason = ""
+
+            for sheet_plan in exercise_plan.sheets:
+                sheet_dict = sheet_plan.model_dump() if hasattr(sheet_plan, "model_dump") else dict(sheet_plan)
+                student_fills = sheet_dict.get("student_fills", [])
+
+                # Skip sheets with no student_fills — generate data but skip judge + solvability
+                if not student_fills:
+                    logger.info("EXERCISE sheet '%s' has no student_fills — generating data, skipping judge+solvability", sheet_dict["name"])
+                    data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, "")
+                    step_label = f"step_2_data_{sheet_dict['name']}_nojudge"
+                    try:
+                        with trace.span("SyntheticDataGenerator", step_label) as rec:
+                            sheet_data = generate_with_tracing(
+                                llm,
+                                user_request=data_request["user_request"],
+                                row_count=data_request["row_count"],
+                                columns=data_request["columns"],
+                                constraints=data_request["constraints"],
+                                recorder=rec,
+                            )
+                    except Exception as e:
+                        logger.exception("EXERCISE data generation FAILED for sheet '%s': %s", sheet_dict["name"], e)
                         raise
+                    sheet_data["name"] = sheet_dict["name"]
+                    sheet_data["quality_passed"] = True
+                    sheet_data["quality_reason"] = ""
+                    all_sheets_data.append(sheet_data)
+                    quality_records.append({"name": sheet_dict["name"], "final_passed": True, "judged": False, "attempts": []})
                     continue
 
-                # Step 3: Judge quality
-                judge_input = {
-                    "exercise_plan": exercise_plan.model_dump_json(),
-                    "sheet_name": sheet_dict["name"],
-                    "generated_data": json.dumps(sheet_data),
-                    "previous_sheets_data": json.dumps(all_sheets_data) if all_sheets_data else "None",
-                    "difficulty": exercise_plan.difficulty,
-                    "expected_rows": exercise_plan.row_count,
-                }
-                judge_label = f"step_3_judge_{sheet_dict['name']}_attempt_{attempt + 1}"
-                with trace.span("QualityJudge", judge_label) as rec:
-                    messages = judge._build_messages(judge_input, task_prompt=judge_quality_task_prompt)
-                    rec.set_input(messages)
-                    raw_result = judge._model.with_structured_output(JudgeQualityResult, include_raw=True).invoke(messages)
-                    rec.set_response(raw_result["raw"])
-                    judge_result: JudgeQualityResult = raw_result["parsed"]
-                    rec.set_parsed(judge_result)
+                logger.info("EXERCISE generating data for sheet '%s'", sheet_dict["name"])
+                retry_reason = ""
+                sheet_data = None
+                sheet_attempts: list[dict] = []
+                final_passed = False
 
-                sheet_attempts.append({
-                    "attempt": attempt + 1,
-                    "passed": judge_result.passed,
-                    "reason": judge_result.reason,
-                    "fix_instruction": judge_result.fix_instruction,
-                })
+                for attempt in range(1 + MAX_JUDGE_RETRIES):
+                    # Step 2: Generate data (returns {"cells": {...}})
+                    data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, retry_reason)
+                    step_label = f"step_2_data_{sheet_dict['name']}_attempt_{attempt + 1}"
+                    try:
+                        with trace.span("SyntheticDataGenerator", step_label) as rec:
+                            sheet_data = generate_with_tracing(
+                                llm,
+                                user_request=data_request["user_request"],
+                                row_count=data_request["row_count"],
+                                columns=data_request["columns"],
+                                constraints=data_request["constraints"],
+                                recorder=rec,
+                            )
+                    except (ValueError, Exception) as e:
+                        retry_reason = str(e)
+                        logger.warning("EXERCISE data generation FAILED for sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
+                        if attempt == MAX_JUDGE_RETRIES:
+                            raise
+                        continue
 
-                if judge_result.passed:
+                    # Step 3: Judge quality
+                    judge_input = {
+                        "exercise_plan": exercise_plan.model_dump_json(),
+                        "sheet_name": sheet_dict["name"],
+                        "generated_data": json.dumps(sheet_data),
+                        "previous_sheets_data": json.dumps(all_sheets_data) if all_sheets_data else "None",
+                        "difficulty": exercise_plan.difficulty,
+                        "expected_rows": exercise_plan.row_count,
+                    }
+                    judge_label = f"step_3_judge_{sheet_dict['name']}_attempt_{attempt + 1}"
+                    with trace.span("QualityJudge", judge_label) as rec:
+                        messages = judge._build_messages(judge_input, task_prompt=judge_quality_task_prompt)
+                        rec.set_input(messages)
+                        raw_result = judge._model.with_structured_output(JudgeQualityResult, include_raw=True).invoke(messages)
+                        rec.set_response(raw_result["raw"])
+                        judge_result: JudgeQualityResult = raw_result["parsed"]
+                        rec.set_parsed(judge_result)
+
+                    sheet_attempts.append({
+                        "attempt": attempt + 1,
+                        "passed": judge_result.passed,
+                        "reason": judge_result.reason,
+                        "fix_instruction": judge_result.fix_instruction,
+                    })
+
+                    if not judge_result.passed:
+                        retry_reason = _format_correction(judge_result)
+                        logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, judge_result.reason)
+                        continue
+
                     logger.info("EXERCISE quality judge PASSED for sheet '%s' (attempt %d)", sheet_dict["name"], attempt + 1)
+
+                    # Step 4 (NEW): Solvability gate
+                    solved, error_msg = _check_solvability(sheet_dict, sheet_data)
+                    if not solved:
+                        logger.warning("EXERCISE solvability check FAILED for sheet '%s' (attempt %d): %s", sheet_dict["name"], attempt + 1, error_msg)
+                        if "Structural:" in error_msg and re_plan_attempt == 0:
+                            # Trigger re-plan — structural issue needs planner fix
+                            trigger_replan = True
+                            replan_reason = error_msg
+                            break
+                        else:
+                            retry_reason = f"SOLVABILITY FAILURE: {error_msg}. Regenerate the data so all formula references resolve to finite numbers."
+                            continue
+
+                    # All checks passed
+                    logger.info("EXERCISE solvability check PASSED for sheet '%s' (attempt %d)", sheet_dict["name"], attempt + 1)
                     final_passed = True
                     break
 
-                # Build a correction directive (framed as an explicit instruction, not bare prose)
-                retry_reason = _format_correction(judge_result)
-                logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, judge_result.reason)
+                if trigger_replan:
+                    break
 
-            if not final_passed:
-                logger.warning("EXERCISE quality judge EXHAUSTED retries for sheet '%s' — shipping with quality_passed=False", sheet_dict["name"])
+                if not final_passed:
+                    logger.warning("EXERCISE quality/solvability checks EXHAUSTED retries for sheet '%s' — shipping with quality_passed=False", sheet_dict["name"])
 
-            sheet_data["name"] = sheet_dict["name"]
-            # Attach quality flag so the developer can audit shipped-despite-failure exercises
-            sheet_data["quality_passed"] = final_passed
-            sheet_data["quality_reason"] = sheet_attempts[-1]["reason"] if sheet_attempts and not final_passed else ""
-            all_sheets_data.append(sheet_data)
-            quality_records.append({
-                "name": sheet_dict["name"],
-                "final_passed": final_passed,
-                "judged": True,
-                "attempts": sheet_attempts,
-            })
+                sheet_data["name"] = sheet_dict["name"]
+                # Attach quality flag so the developer can audit shipped-despite-failure exercises
+                sheet_data["quality_passed"] = final_passed
+                sheet_data["quality_reason"] = sheet_attempts[-1]["reason"] if sheet_attempts and not final_passed else ""
+                all_sheets_data.append(sheet_data)
+                quality_records.append({
+                    "name": sheet_dict["name"],
+                    "final_passed": final_passed,
+                    "judged": True,
+                    "attempts": sheet_attempts,
+                })
+
+            if trigger_replan and re_plan_attempt == 0:
+                logger.warning("EXERCISE triggering re-plan due to structural solvability failure: %s", replan_reason)
+                replan_ctx = f"Previous plan failed solvability: {replan_reason}. Fix the constants list or formula templates."
+                exercise_plan = _run_planner(extra_ctx=replan_ctx)
+                logger.info("EXERCISE re-plan complete: difficulty=%s, sheets=%d", exercise_plan.difficulty, len(exercise_plan.sheets))
+                # Reset and retry the sheet loop with new plan
+                continue
+            else:
+                # Either no replan needed, or we've exhausted re-plan attempts
+                break
 
         # Combine into single spreadsheet_data payload
         spreadsheet_data = {"sheets": all_sheets_data}
@@ -302,13 +489,18 @@ def start_exercise_with_llm(
         msg_gen = OpeningMessageGenerator(llm)
         sheet_names = [s["name"] for s in all_sheets_data]
         columns_summary = "; ".join(
-            f"{s['name']}: {s.get('headers', [])}" for s in all_sheets_data
+            f"{s['name']}: {list(s.get('cells', {}).keys())[:10]}" for s in all_sheets_data
+        )
+        constants_summary = "; ".join(
+            f"{sp.name}: {[c.label + '=' + c.cell for c in sp.constants]}"
+            for sp in exercise_plan.sheets
         )
         msg_input = {
             "exercise_plan": exercise_plan.model_dump_json(),
             "learner_profile": str(learner_profile),
             "sheet_names": str(sheet_names),
             "columns_summary": columns_summary,
+            "constants_summary": constants_summary,
         }
         with trace.span("OpeningMessageGenerator", "step_4_opening_msg") as rec:
             messages = msg_gen._build_messages(msg_input, task_prompt=opening_message_task_prompt)

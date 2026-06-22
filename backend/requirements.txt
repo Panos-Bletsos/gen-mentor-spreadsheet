@@ -19,3 +19,4 @@ python-multipart
 pypdf
 pdfplumber
 pypinyin
+formulas==1.3.4
