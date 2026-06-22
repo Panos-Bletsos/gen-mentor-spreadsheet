@@ -73,6 +73,16 @@ def _topic_to_str(topic: Any) -> str:
     return str(topic)
 
 
+def _format_correction(judge_result: "JudgeQualityResult") -> str:
+    """Frame a judge rejection as an explicit correction directive for the generator."""
+    lines = ["The previous attempt was REJECTED by the quality judge."]
+    if judge_result.reason:
+        lines.append(f"Reason: {judge_result.reason}")
+    if judge_result.fix_instruction:
+        lines.append(f"Required correction — you MUST apply this to the data: {judge_result.fix_instruction}")
+    return "\n".join(lines)
+
+
 def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: list[dict], retry_reason: str = "") -> dict:
     """Build a data_generator payload from the exercise plan + one sheet."""
     all_columns = sheet_plan.get("columns", [])
@@ -146,6 +156,7 @@ def start_exercise_with_llm(
     """
     chain_start = time.time()
     topic_str = _topic_to_str(topic)
+    quality_summary: dict = {}
     logger.info("EXERCISE [Step 1/4] Planning exercise for topic: %.80s", topic_str)
 
     # Build the context block: label it as brainstorming history when present,
@@ -186,19 +197,23 @@ def start_exercise_with_llm(
         # --- Step 2 & 3: Generate Data + Judge Quality (with retry loop) ---
         logger.info("EXERCISE [Step 2/4] Generating data + quality judging")
         all_sheets_data = []
+        quality_records: list[dict] = []  # per-sheet quality history for trace + returned data
         judge = QualityJudge(llm)
 
         for sheet_plan in exercise_plan.sheets:
             sheet_dict = sheet_plan.model_dump() if hasattr(sheet_plan, "model_dump") else dict(sheet_plan)
             prefilled = sheet_dict.get("prefilled", [])
-            # Skip sheets with no prefilled data
+            # Skip sheets with no prefilled data — count as not-judged (quality_passed=True)
             if not prefilled:
-                all_sheets_data.append({"name": sheet_dict["name"], "headers": sheet_dict.get("columns", []), "rows": []})
+                all_sheets_data.append({"name": sheet_dict["name"], "headers": sheet_dict.get("columns", []), "rows": [], "quality_passed": True, "quality_reason": ""})
+                quality_records.append({"name": sheet_dict["name"], "final_passed": True, "judged": False, "attempts": []})
                 continue
 
             logger.info("EXERCISE generating data for sheet '%s'", sheet_dict["name"])
             retry_reason = ""
             sheet_data = None
+            sheet_attempts: list[dict] = []
+            final_passed = False
             for attempt in range(1 + MAX_JUDGE_RETRIES):
                 # Step 2: Generate data
                 data_request = _build_data_request(exercise_plan, sheet_dict, all_sheets_data, retry_reason)
@@ -238,17 +253,48 @@ def start_exercise_with_llm(
                     judge_result: JudgeQualityResult = raw_result["parsed"]
                     rec.set_parsed(judge_result)
 
+                sheet_attempts.append({
+                    "attempt": attempt + 1,
+                    "passed": judge_result.passed,
+                    "reason": judge_result.reason,
+                    "fix_instruction": judge_result.fix_instruction,
+                })
+
                 if judge_result.passed:
                     logger.info("EXERCISE quality judge PASSED for sheet '%s' (attempt %d)", sheet_dict["name"], attempt + 1)
+                    final_passed = True
                     break
-                retry_reason = judge_result.reason
-                logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, retry_reason)
+
+                # Build a correction directive (framed as an explicit instruction, not bare prose)
+                retry_reason = _format_correction(judge_result)
+                logger.warning("EXERCISE quality judge REJECTED sheet '%s' (attempt %d/%d): %s", sheet_dict["name"], attempt + 1, 1 + MAX_JUDGE_RETRIES, judge_result.reason)
+
+            if not final_passed:
+                logger.warning("EXERCISE quality judge EXHAUSTED retries for sheet '%s' — shipping with quality_passed=False", sheet_dict["name"])
 
             sheet_data["name"] = sheet_dict["name"]
+            # Attach quality flag so the developer can audit shipped-despite-failure exercises
+            sheet_data["quality_passed"] = final_passed
+            sheet_data["quality_reason"] = sheet_attempts[-1]["reason"] if sheet_attempts and not final_passed else ""
             all_sheets_data.append(sheet_data)
+            quality_records.append({
+                "name": sheet_dict["name"],
+                "final_passed": final_passed,
+                "judged": True,
+                "attempts": sheet_attempts,
+            })
 
         # Combine into single spreadsheet_data payload
         spreadsheet_data = {"sheets": all_sheets_data}
+
+        # Build exercise-level quality summary and attach to the trace
+        sheets_failed = [r["name"] for r in quality_records if r["judged"] and not r["final_passed"]]
+        quality_summary = {
+            "quality_passed": len(sheets_failed) == 0,
+            "sheets_failed": sheets_failed,
+            "sheets": quality_records,
+        }
+        trace.set_quality_summary(quality_summary)
 
         # --- Step 4: Generate Opening Message ---
         logger.info("EXERCISE [Step 3/4] Data generation complete for %d sheets", len(all_sheets_data))
@@ -280,4 +326,5 @@ def start_exercise_with_llm(
         "exercise_plan": exercise_plan.model_dump(),
         "spreadsheet_data": spreadsheet_data,
         "tutor_message": tutor_message,
+        "quality_summary": quality_summary,
     }

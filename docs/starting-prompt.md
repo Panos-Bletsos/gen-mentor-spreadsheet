@@ -1,0 +1,11 @@
+I want to learn spreadsheets and specifically:
+- Basic Arithmetic and Absolute Referencing.
+- Core Aggregation Functions (SUM, AVERAGE, MIN, MAX).
+- Text Manipulation Functions (CONCATENATE, LEFT, RIGHT).
+- Date and Time Functions.
+- Fundamental Logical Operations (IF, AND, OR).
+- Conditional Aggregations (SUMIF, COUNTIF).
+- Multi-Conditional Aggregations (SUMIFS, COUNTIFS).
+- Error Handling and Nested Functions (IFERROR, Nested IFs).
+- Relational Data Retrieval (VLOOKUP).
+- Advanced Lookup Techniques (INDEX & MATCH / XLOOKUP).

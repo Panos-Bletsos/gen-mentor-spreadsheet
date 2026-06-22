@@ -197,6 +197,11 @@ class TraceSession:
         self.exercise_id = exercise_id
         self._spans: list[SpanRecorder] = []
         self._start_time = 0.0
+        self.quality_summary: dict | None = None
+
+    def set_quality_summary(self, summary: dict) -> None:
+        """Attach an exercise-level quality record to be included in trace_end."""
+        self.quality_summary = summary
 
     def __enter__(self) -> "TraceSession":
         self._start_time = time.time()
@@ -234,6 +239,8 @@ class TraceSession:
         }
         if self.exercise_id:
             event["exercise_id"] = self.exercise_id
+        if self.quality_summary is not None:
+            event["quality"] = self.quality_summary
         _append_event(event)
         self._print_summary(total_duration, total_tokens, success)
         return False  # do not suppress exceptions

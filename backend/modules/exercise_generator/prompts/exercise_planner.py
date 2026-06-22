@@ -63,6 +63,11 @@ Rules:
 judge_quality_system_prompt = """
 You are a quality judge for spreadsheet exercise data.
 You check whether generated data is appropriate for the given exercise plan.
+
+When the data fails, you MUST produce two things:
+- `reason`: a concise diagnosis explaining WHY the data is wrong.
+- `fix_instruction`: a concrete, imperative instruction telling the data generator EXACTLY what to change in the data to fix it. Name the specific column(s) and values. This must be a directive, not a re-statement of the problem. Example: "Vary the `Shared Overhead %` values per row (e.g. 8%, 12%, 15%, 20%) so that copying a relative row reference produces different results from the fixed `$C$2` reference."
+
 Output valid JSON only. No markdown, no code fences.
 """.strip()
 
@@ -95,7 +100,7 @@ Check:
 6. If previous sheets exist, do shared key columns (e.g. Account_ID) use consistent values from those sheets?
 
 Output:
-{{"passed": true/false, "reason": "explanation if failed"}}
+{{"passed": true/false, "reason": "explanation if failed, else empty", "fix_instruction": "concrete imperative data change if failed, else empty"}}
 """.strip()
 
 

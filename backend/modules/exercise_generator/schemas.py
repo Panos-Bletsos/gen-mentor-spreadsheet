@@ -48,4 +48,5 @@ class StartExerciseResult(BaseModel):
 
 class JudgeQualityResult(BaseModel):
     passed: bool
-    reason: str = ""
+    reason: str = ""           # human-facing diagnosis of WHY it failed
+    fix_instruction: str = ""  # concrete data change the generator must apply on the next attempt
