@@ -221,6 +221,19 @@ def _build_data_request(plan: ExercisePlan, sheet_plan: dict, prev_sheets_data: 
     if student_fills:
         context_parts.append(f"Leave these columns EMPTY (students will fill them): {student_fills}")
 
+    # Tell the generator about off-grid constant cells so it emits them in the A1 cell-map.
+    # Without this, the generator never knows that $H$2 should hold a numeric value.
+    constants = sheet_plan.get("constants", [])
+    if constants:
+        const_descriptions = [
+            f"{c.get('label_cell', '')}=\"{c.get('label', '')}\" and {c.get('cell', '')}=<realistic numeric value for this scenario>"
+            for c in constants
+        ]
+        context_parts.append(
+            f"IMPORTANT: Also populate these OFF-GRID constant cells (referenced by student formulas): {'; '.join(const_descriptions)}. "
+            f"Include them in the cells map at their exact addresses."
+        )
+
     if prev_sheets_data:
         prev_summary = [{"name": s["name"], "cells": s.get("cells", {})} for s in prev_sheets_data]
         context_parts.append(f"Related sheets already generated: {json.dumps(prev_summary)}")

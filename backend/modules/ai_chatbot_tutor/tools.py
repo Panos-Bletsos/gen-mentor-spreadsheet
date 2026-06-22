@@ -23,11 +23,20 @@ class BrainstormingDone(BaseModel):
 
 
 class SheetData(BaseModel):
-    """One sheet tab in a workbook update."""
+    """One sheet tab in a workbook update, keyed by A1 address.
+
+    Use plain A1 keys (no $): 'A1', 'B2', etc. Row 1 is the header row.
+    Formula cells start with '=' and are evaluated by Univer on load.
+    Example: {'A1': 'Revenue', 'B1': 'Cost', 'A2': 50000, 'B2': 30000}
+    """
 
     name: str = Field(description="Sheet tab name, e.g. 'Sales Data'")
-    headers: list[str] = Field(description="Column headers")
-    rows: list[list[Any]] = Field(description="Data rows, each matching headers length")
+    cells: dict[str, Any] = Field(
+        description=(
+            "A1-keyed cell map: plain A1 address (e.g. 'B3') → scalar value or formula string. "
+            "Row 1 = headers. Formula cells start with '='. Omit student-fill cells."
+        )
+    )
 
 
 class SheetUpdate(BaseModel):
@@ -35,3 +44,23 @@ class SheetUpdate(BaseModel):
     needs to populate, fill, correct, or reset sheet data."""
 
     sheets: list[SheetData] = Field(description="Complete workbook content")
+
+
+class HighlightCells(BaseModel):
+    """Highlight target cell range(s) in the spreadsheet as a visual hint.
+    Non-destructive — does not modify the student's data, never persisted to saved work."""
+
+    sheet: str = Field(description="Sheet tab name the ranges belong to, e.g. 'Sales Data'")
+    ranges: list[str] = Field(description="A1-style ranges to highlight, e.g. ['C2:C11', 'D2:D11']")
+    level: int = Field(description="Hint level: 1 (column-level nudge), 2 (formula name), or 3 (exact target cell)")
+    note: str = Field(description="One short line for the student, action-first, e.g. 'This column needs a formula.'")
+
+
+class DemoEdit(BaseModel):
+    """Write a demonstration formula into ONE cell (Level-4 hint).
+    The student will be shown a 'Now you try' button to revert it and type it themselves."""
+
+    sheet: str = Field(description="Sheet tab name, e.g. 'Sales Data'")
+    cell: str = Field(description="Single A1-notation cell to write the demo into, e.g. 'C2'")
+    formula: str = Field(description="Demonstration formula starting with '=', e.g. '=A2*B2'")
+    explanation: str = Field(description="One-line explanation of what the formula does, e.g. 'price times quantity gives revenue'")
