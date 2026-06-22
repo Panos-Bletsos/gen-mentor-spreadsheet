@@ -41,11 +41,16 @@ class SyntheticSpreadsheetData(BaseModel):
     @field_validator("cells")
     @classmethod
     def validate_cells(cls, v: dict) -> dict:
-        """Accept only plain A1 keys and scalar values."""
-        for key in v:
-            if not _A1_PATTERN.match(key):
+        """Normalise A1 keys to uppercase and reject non-A1 keys or empty maps."""
+        if not v:
+            raise ValueError("cells must not be empty")
+        normalized: dict[str, Any] = {}
+        for key, val in v.items():
+            upper = key.upper()
+            if not _A1_PATTERN.match(upper):
                 raise ValueError(f"Invalid A1 key: {key!r}")
-        return v
+            normalized[upper] = val
+        return normalized
 
 
 class SyntheticDataGenerator(BaseStructuredAgent):
