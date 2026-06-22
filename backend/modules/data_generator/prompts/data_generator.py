@@ -1,10 +1,11 @@
 synthetic_spreadsheet_output_format = """
 {
-    "headers": ["Column A", "Column B", "Column C"],
-    "rows": [
-        ["Value A1", "Value B1", "Value C1"],
-        ["Value A2", "Value B2", "Value C2"]
-    ]
+    "cells": {
+        "A1": "Column A Header",
+        "B1": "Column B Header",
+        "A2": "Value A2",
+        "B2": 42
+    }
 }
 """.strip()
 
@@ -18,12 +19,14 @@ Core directives:
 2. Respect `row_count` exactly unless impossible due to invalid input.
 3. If `columns` are provided, use them as-is and in the same order.
 4. If `columns` are not provided, infer sensible column names from the request.
-5. Keep row width consistent with `headers` length.
-6. Values should be realistic for the requested domain and diverse across rows.
-7. Prefer simple JSON-compatible scalar values (string, number, boolean, null).
-8. Do not include explanations, markdown, or code fences.
+5. Values should be realistic for the requested domain and diverse across rows.
+6. Prefer simple JSON-compatible scalar values (string, number, boolean, null).
+7. Row 1 is always the header row. Data rows start at row 2.
+8. Keys are plain A1 addresses (no $). Values are plain scalars (string, number, boolean, null).
+9. Omit cells that should remain empty (student-fill columns). Do not include empty-string values for absent cells.
+10. Do not include explanations, markdown, or code fences.
 
-Return a valid JSON object with this exact shape:
+Return a valid JSON object that is an A1 cell-map with this exact shape:
 {synthetic_spreadsheet_output_format}
 """.strip()
 
@@ -42,4 +45,6 @@ Columns (optional, use exactly if present):
 
 Additional constraints:
 {constraints}
+
+Return an A1 cell-map JSON object.
 """.strip()

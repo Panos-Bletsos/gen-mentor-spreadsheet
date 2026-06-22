@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 from base import BaseStructuredAgent
 
@@ -13,6 +14,8 @@ from modules.data_generator.prompts.data_generator import (
     synthetic_data_generator_system_prompt,
     synthetic_data_generator_task_prompt,
 )
+
+_A1_PATTERN = re.compile(r'^[A-Z]+[1-9][0-9]*$', re.IGNORECASE)
 
 
 class SyntheticDataGeneratorPayload(BaseModel):
@@ -33,32 +36,16 @@ class SyntheticDataGeneratorPayload(BaseModel):
 
 
 class SyntheticSpreadsheetData(BaseModel):
-    headers: list[str] = Field(..., min_length=1)
-    rows: list[list[str]] = Field(default_factory=list)
+    cells: dict[str, Any]
 
-    @field_validator("headers")
+    @field_validator("cells")
     @classmethod
-    def validate_headers(cls, value: list[str]) -> list[str]:
-        cleaned = [h.strip() for h in value if h and h.strip()]
-        if not cleaned:
-            raise ValueError("At least one non-empty header is required.")
-        return cleaned
-
-    @model_validator(mode="after")
-    def validate_row_width(self) -> "SyntheticSpreadsheetData":
-        expected_width = len(self.headers)
-        fixed_rows = []
-        for idx, row in enumerate(self.rows):
-            if len(row) > expected_width:
-                logger.warning("DATAGEN  row %d has %d values, truncating to %d", idx, len(row), expected_width)
-                fixed_rows.append(row[:expected_width])
-            elif len(row) < expected_width:
-                logger.warning("DATAGEN  row %d has %d values, padding to %d", idx, len(row), expected_width)
-                fixed_rows.append(row + [""] * (expected_width - len(row)))
-            else:
-                fixed_rows.append(row)
-        self.rows = fixed_rows
-        return self
+    def validate_cells(cls, v: dict) -> dict:
+        """Accept only plain A1 keys and scalar values."""
+        for key in v:
+            if not _A1_PATTERN.match(key):
+                raise ValueError(f"Invalid A1 key: {key!r}")
+        return v
 
 
 class SyntheticDataGenerator(BaseStructuredAgent):
@@ -78,21 +65,7 @@ class SyntheticDataGenerator(BaseStructuredAgent):
             task_prompt=synthetic_data_generator_task_prompt,
         )
 
-        if len(validated_output.rows) != payload.row_count:
-            logger.warning("DATAGEN  row count mismatch: expected %d, got %d", payload.row_count, len(validated_output.rows))
-            raise ValueError(
-                f"Expected {payload.row_count} rows, got {len(validated_output.rows)}."
-            )
-
-        if payload.columns:
-            expected_headers = [col.strip() for col in payload.columns if col and col.strip()]
-            if validated_output.headers != expected_headers:
-                logger.warning("DATAGEN  header mismatch: expected %s, got %s", expected_headers, validated_output.headers)
-                raise ValueError(
-                    "Model output headers do not match user-provided columns."
-                )
-
-        logger.info("DATAGEN  validation passed (%d rows, %d columns)", len(validated_output.rows), len(validated_output.headers))
+        logger.info("DATAGEN  validation passed (%d cells)", len(validated_output.cells))
         return validated_output.model_dump()
 
 
@@ -146,17 +119,7 @@ def generate_with_tracing(
     if recorder is not None:
         recorder.set_response(ai_message)
 
-    if len(validated_output.rows) != payload.row_count:
-        logger.warning("DATAGEN  row count mismatch: expected %d, got %d", payload.row_count, len(validated_output.rows))
-        raise ValueError(f"Expected {payload.row_count} rows, got {len(validated_output.rows)}.")
-
-    if payload.columns:
-        expected_headers = [col.strip() for col in payload.columns if col and col.strip()]
-        if validated_output.headers != expected_headers:
-            logger.warning("DATAGEN  header mismatch: expected %s, got %s", expected_headers, validated_output.headers)
-            raise ValueError("Model output headers do not match user-provided columns.")
-
-    logger.info("DATAGEN  validation passed (%d rows, %d columns)", len(validated_output.rows), len(validated_output.headers))
+    logger.info("DATAGEN  validation passed (%d cells)", len(validated_output.cells))
     result = validated_output.model_dump()
     if recorder is not None:
         recorder.set_parsed(validated_output)
