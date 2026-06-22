@@ -494,7 +494,9 @@ def start_exercise_with_llm(
         msg_gen = OpeningMessageGenerator(llm)
         sheet_names = [s["name"] for s in all_sheets_data]
         columns_summary = "; ".join(
-            f"{s['name']}: {list(s.get('cells', {}).keys())[:10]}" for s in all_sheets_data
+            # Extract row-1 values (header names) from the A1 cell-map, sorted by column letter.
+            f"{s['name']}: {[v for k, v in sorted(s.get('cells', {}).items()) if re.match(r'^[A-Z]+1$', k.upper())]}"
+            for s in all_sheets_data
         )
         constants_summary = "; ".join(
             f"{sp.name}: {[c.label + '=' + c.cell for c in sp.constants]}"
