@@ -101,7 +101,7 @@ def _check_solvability(sheet_plan_dict: dict, sheet_data_dict: dict) -> tuple[bo
 
     Returns (passed: bool, error_message: str).
     """
-    import formulas
+    import formulas  # type: ignore[import]
 
     template = sheet_plan_dict.get("expected_formula_template", "")
     if not template:
@@ -294,10 +294,15 @@ def start_exercise_with_llm(
         "context": context if context else "(none)",
     }
 
+    # Initialise return-value locals so Pyright sees them as always-bound.
+    exercise_plan: Optional[ExercisePlan] = None
+    spreadsheet_data: dict = {"sheets": []}
+    tutor_message: str = ""
+
     with TraceSession("exercise_generation", metadata={"topic": topic_str}, exercise_id=exercise_id) as trace:
         # --- Step 1: Plan Exercise ---
         planner = ExercisePlanner(llm)
-        exercise_plan: ExercisePlan = None  # type: ignore
+        exercise_plan = None  # reassigned immediately by _run_planner()
 
         def _run_planner(extra_ctx: str = "") -> ExercisePlan:
             """Run ExercisePlanner, optionally with extra retry context appended."""
@@ -308,7 +313,7 @@ def start_exercise_with_llm(
                 try:
                     messages = planner._build_messages(pi, task_prompt=exercise_planner_task_prompt)
                     rec.set_input(messages)
-                    raw_result = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)
+                    raw_result: dict = planner._model.with_structured_output(ExercisePlan, include_raw=True).invoke(messages)  # type: ignore[assignment]
                     rec.set_response(raw_result["raw"])
                     ep: ExercisePlan = raw_result["parsed"]
                     rec.set_parsed(ep)
@@ -405,7 +410,7 @@ def start_exercise_with_llm(
                     with trace.span("QualityJudge", judge_label) as rec:
                         messages = judge._build_messages(judge_input, task_prompt=judge_quality_task_prompt)
                         rec.set_input(messages)
-                        raw_result = judge._model.with_structured_output(JudgeQualityResult, include_raw=True).invoke(messages)
+                        raw_result: dict = judge._model.with_structured_output(JudgeQualityResult, include_raw=True).invoke(messages)  # type: ignore[assignment]
                         rec.set_response(raw_result["raw"])
                         judge_result: JudgeQualityResult = raw_result["parsed"]
                         rec.set_parsed(judge_result)
@@ -507,9 +512,9 @@ def start_exercise_with_llm(
             rec.set_input(messages)
             ai_response = msg_gen._model.invoke(messages)
             rec.set_response(ai_response)
-            tutor_message = preprocess_response(
+            tutor_message = str(preprocess_response(
                 {"messages": [ai_response]}, only_text=True, exclude_think=True, json_output=False
-            )
+            ))
             rec.set_parsed(tutor_message)
 
     logger.info("EXERCISE chain complete (%.1fs)", time.time() - chain_start)
