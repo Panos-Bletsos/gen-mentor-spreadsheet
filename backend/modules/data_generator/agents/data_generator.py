@@ -60,7 +60,7 @@ class SyntheticDataGenerator(BaseStructuredAgent):
 
         logger.info("DATAGEN  generating %d rows, columns=%s", payload.row_count, payload.columns)
 
-        validated_output = self.invoke(
+        validated_output: SyntheticSpreadsheetData = self.invoke(  # type: ignore[assignment]
             payload.model_dump(),
             task_prompt=synthetic_data_generator_task_prompt,
         )
@@ -112,7 +112,7 @@ def generate_with_tracing(
         recorder.set_input(messages)
 
     structured = generator._model.with_structured_output(SyntheticSpreadsheetData, include_raw=True)
-    raw_result = structured.invoke(messages)
+    raw_result: dict = structured.invoke(messages)  # type: ignore[assignment]
     ai_message = raw_result["raw"]
     validated_output: SyntheticSpreadsheetData = raw_result["parsed"]
 
