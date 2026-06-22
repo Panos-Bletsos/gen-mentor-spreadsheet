@@ -1,6 +1,31 @@
 """
 Utility functions for parsing Univer sheet data into usable formats.
 """
+import re
+
+
+def a1_to_rowcol(a1: str) -> tuple:
+    """Convert A1 address (e.g. 'B3') to 0-based (row_idx, col_idx) for Univer cellData."""
+    m = re.match(r'^([A-Z]+)([0-9]+)$', a1.strip().upper())
+    if not m:
+        raise ValueError(f"Invalid A1 address: {a1!r}")
+    col_str, row_str = m.group(1), m.group(2)
+    col = 0
+    for ch in col_str:
+        col = col * 26 + (ord(ch) - ord('A') + 1)
+    col -= 1  # 0-based
+    row = int(row_str) - 1  # 0-based
+    return (row, col)
+
+
+def _col_idx_to_letter(idx: int) -> str:
+    """Convert 0-based column index to column letter(s). 0='A', 25='Z', 26='AA'."""
+    result = ""
+    n = idx + 1
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        result = chr(ord('A') + rem) + result
+    return result
 
 
 def _coerce_cell_value(value):
@@ -17,10 +42,18 @@ def _coerce_cell_value(value):
 def _build_cell_entry(value):
     """
     Build a Univer cell object from a Python value.
+
+    Formula strings (starting with '=') are stored as {f: "=..."} so Univer
+    evaluates them. This lets rebuilt snapshots preserve student formulas across
+    iframe reloads, and allows tutor demo formulas to compute on mount.
     """
     normalized = _coerce_cell_value(value)
     if normalized is None:
         return None
+
+    # Formula strings → {f: ...} so Univer evaluates them on load
+    if isinstance(normalized, str) and normalized.startswith("="):
+        return {"f": normalized}
 
     cell = {"v": normalized}
     if isinstance(normalized, (int, float)) and not isinstance(normalized, bool):
@@ -170,7 +203,7 @@ def build_univer_multi_sheet_workbook(sheets_list, workbook_name="GenMentor Shee
     Build a Univer workbook with multiple sheets.
 
     Args:
-        sheets_list: list of dicts, each with keys "name", "headers", "rows"
+        sheets_list: list of dicts, each with keys "name" and "cells" (A1 cell-map)
         workbook_name: Name of the workbook
 
     Returns:
@@ -185,26 +218,26 @@ def build_univer_multi_sheet_workbook(sheets_list, workbook_name="GenMentor Shee
     for i, sheet_info in enumerate(sheets_list):
         sheet_id = f"sheet{i + 1}"
         sheet_name = sheet_info.get("name", f"Sheet{i + 1}")
-        headers = sheet_info.get("headers", [])
-        rows = sheet_info.get("rows", [])
-        grid = [headers] + rows if headers else rows
+        cells_map: dict = sheet_info.get("cells", {})
 
-        cell_data = {}
-        max_col_count = 0
-        for row_idx, row in enumerate(grid):
-            if not isinstance(row, list):
+        cell_data: dict = {}
+        max_row_idx = 0
+        max_col_idx = 0
+
+        for a1_key, value in cells_map.items():
+            try:
+                row_idx, col_idx = a1_to_rowcol(a1_key)
+            except ValueError:
                 continue
-            max_col_count = max(max_col_count, len(row))
-            row_cells = {}
-            for col_idx, value in enumerate(row):
-                cell = _build_cell_entry(value)
-                if cell is not None:
-                    row_cells[str(col_idx)] = cell
-            if row_cells:
-                cell_data[str(row_idx)] = row_cells
+            cell_entry = _build_cell_entry(value)
+            if cell_entry is None:
+                continue
+            cell_data.setdefault(str(row_idx), {})[str(col_idx)] = cell_entry
+            max_row_idx = max(max_row_idx, row_idx)
+            max_col_idx = max(max_col_idx, col_idx)
 
-        row_count = max(1000, len(grid) + 20)
-        column_count = max(20, max_col_count + 5)
+        row_count = max(1000, max_row_idx + 20)
+        column_count = max(20, max_col_idx + 5)
 
         sheet_order.append(sheet_id)
         sheets_dict[sheet_id] = {
@@ -221,6 +254,77 @@ def build_univer_multi_sheet_workbook(sheets_list, workbook_name="GenMentor Shee
         "sheetOrder": sheet_order,
         "sheets": sheets_dict,
     }
+
+
+def rebuild_sheets_from_snapshot(raw_snapshot):
+    """Rebuild the durable [{name, cells}] list from a live workbook.save() snapshot.
+
+    Prefers the formula string (f) over the cached display value (v) for formula cells,
+    so that formulas survive iframe reloads and are re-evaluated by Univer on mount.
+    _build_cell_entry already handles formula strings starting with '=' correctly.
+
+    Args:
+        raw_snapshot: dict returned by workbook.save() (the Univer snapshot format).
+
+    Returns:
+        list of {name, cells} dicts (cells is an A1 cell-map), or None if the snapshot is invalid.
+    """
+    if not raw_snapshot or not isinstance(raw_snapshot, dict):
+        return None
+
+    snapshot_sheets = raw_snapshot.get("sheets", {})
+    if not isinstance(snapshot_sheets, dict) or not snapshot_sheets:
+        return None
+
+    sheet_order = raw_snapshot.get("sheetOrder", list(snapshot_sheets.keys()))
+    result = []
+
+    for sheet_id in sheet_order:
+        sheet_info = snapshot_sheets.get(sheet_id)
+        if not isinstance(sheet_info, dict):
+            continue
+
+        sheet_name = sheet_info.get("name", sheet_id)
+        cell_data = sheet_info.get("cellData", {})
+        if not isinstance(cell_data, dict) or not cell_data:
+            continue
+
+        # Find grid dimensions
+        max_row = -1
+        max_col = -1
+        for row_str, row_data in cell_data.items():
+            try:
+                row_idx = int(row_str)
+                max_row = max(max_row, row_idx)
+                if isinstance(row_data, dict):
+                    for col_str in row_data.keys():
+                        try:
+                            max_col = max(max_col, int(col_str))
+                        except (ValueError, TypeError):
+                            pass
+            except (ValueError, TypeError):
+                pass
+
+        if max_row < 0:
+            continue
+
+        # Build A1 cell-map from the Univer snapshot, preferring formula (f) over cached value (v)
+        cells: dict = {}
+        for r in range(max_row + 1):
+            for c in range(max_col + 1):
+                cell = cell_data.get(str(r), {}).get(str(c))
+                if isinstance(cell, dict):
+                    val = cell.get("f") if cell.get("f") is not None else cell.get("v")
+                else:
+                    val = None
+                if val is not None:
+                    a1 = _col_idx_to_letter(c) + str(r + 1)
+                    cells[a1] = val
+
+        if cells:
+            result.append({"name": sheet_name, "cells": cells})
+
+    return result if result else None
 
 
 def extract_cell_values(sheet_data):
