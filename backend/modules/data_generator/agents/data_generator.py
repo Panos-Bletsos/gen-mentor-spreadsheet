@@ -35,22 +35,37 @@ class SyntheticDataGeneratorPayload(BaseModel):
         return cleaned
 
 
-class SyntheticSpreadsheetData(BaseModel):
-    cells: dict[str, Any]
+class CellEntry(BaseModel):
+    """One spreadsheet cell as an (address, value) pair.
 
-    @field_validator("cells")
-    @classmethod
-    def validate_cells(cls, v: dict) -> dict:
-        """Normalise A1 keys to uppercase and reject non-A1 keys or empty maps."""
-        if not v:
+    Modelled as a list element rather than a dict entry because OpenAI strict
+    structured outputs reject open-ended maps (additionalProperties must be
+    false). The list of entries is reduced back to an A1 cell-map via
+    SyntheticSpreadsheetData.to_cell_map().
+    """
+
+    addr: str
+    value: str | int | float | bool | None
+
+
+class SyntheticSpreadsheetData(BaseModel):
+    cells: list[CellEntry]
+
+    def to_cell_map(self) -> dict[str, Any]:
+        """Reduce the cell list to an A1 cell-map ({A1: value}).
+
+        Uppercases addresses; validates each addr against A1 pattern; last entry
+        wins on duplicate addresses; raises if result is empty.
+        """
+        if not self.cells:
             raise ValueError("cells must not be empty")
-        normalized: dict[str, Any] = {}
-        for key, val in v.items():
-            upper = key.upper()
+        result: dict[str, Any] = {}
+        for entry in self.cells:
+            upper = entry.addr.upper()
             if not _A1_PATTERN.match(upper):
-                raise ValueError(f"Invalid A1 key: {key!r}")
-            normalized[upper] = val
-        return normalized
+                raise ValueError(f"Invalid A1 address: {entry.addr!r}")
+            result[upper] = entry.value
+        return result
 
 
 class SyntheticDataGenerator(BaseStructuredAgent):
@@ -70,8 +85,9 @@ class SyntheticDataGenerator(BaseStructuredAgent):
             task_prompt=synthetic_data_generator_task_prompt,
         )
 
-        logger.info("DATAGEN  validation passed (%d cells)", len(validated_output.cells))
-        return validated_output.model_dump()
+        cell_map = validated_output.to_cell_map()
+        logger.info("DATAGEN  validation passed (%d cells)", len(cell_map))
+        return {"cells": cell_map}
 
 
 def generate_synthetic_spreadsheet_data_with_llm(
@@ -124,8 +140,9 @@ def generate_with_tracing(
     if recorder is not None:
         recorder.set_response(ai_message)
 
-    logger.info("DATAGEN  validation passed (%d cells)", len(validated_output.cells))
-    result = validated_output.model_dump()
+    cell_map = validated_output.to_cell_map()
+    logger.info("DATAGEN  validation passed (%d cells)", len(cell_map))
+    result = {"cells": cell_map}
     if recorder is not None:
-        recorder.set_parsed(validated_output)
+        recorder.set_parsed(result)
     return result

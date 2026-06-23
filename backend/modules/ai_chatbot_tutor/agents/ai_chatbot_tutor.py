@@ -9,7 +9,7 @@ from pydantic import BaseModel, field_validator
 
 from base import BaseAgent
 from base.search_rag import SearchRagManager, format_docs
-from modules.ai_chatbot_tutor.tools import BrainstormingDone, SheetUpdate
+from modules.ai_chatbot_tutor.tools import BrainstormingDone, DemoEdit, HighlightCells, SheetUpdate
 from utils.tracing import TraceSession
 
 logger = logging.getLogger(__name__)
@@ -134,6 +134,8 @@ class AITutorChatbot(BaseAgent):
 				"external_resources": external_context,
 				"exercise_plan": json.dumps(exercise_ctx.get("plan", {})),
 				"sheet_snapshot": json.dumps(exercise_ctx.get("sheet_snapshot", {})),
+				"selection": json.dumps(exercise_ctx.get("selection")),
+				"hint_level": str(exercise_ctx.get("hint_level", 1)),
 			}
 		else:
 			task_prompt = ai_tutor_chatbot_task_prompt
@@ -154,7 +156,7 @@ class AITutorChatbot(BaseAgent):
 		if mode == "brainstorming":
 			model_with_tools = self._model.bind_tools([BrainstormingDone])
 		else:  # exercise
-			model_with_tools = self._model.bind_tools([SheetUpdate])
+			model_with_tools = self._model.bind_tools([SheetUpdate, HighlightCells, DemoEdit])
 
 		if trace_session is not None:
 			with trace_session.span("AITutorChatbot", f"chat_{mode}") as rec:

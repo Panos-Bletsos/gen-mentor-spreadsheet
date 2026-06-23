@@ -2,6 +2,7 @@
 End-to-end integration tests for POST /generate-synthetic-sheet-data.
 
 All tests make REAL LLM calls — no mocking.
+Response contract: {"cells": {"A1": value, "B2": value, ...}}
 """
 
 import pytest
@@ -13,9 +14,7 @@ import pytest
 # Given: user_request="Monthly sales data for a small electronics store"
 #        (defaults: row_count=20, columns=None, constraints="")
 # When:  POST /generate-synthetic-sheet-data is called
-# Then:  response is 200, body has headers (non-empty list) and rows
-#        (list of lists, each row width == len(headers))
-
+# Then:  response is 200, body has a non-empty "cells" dict with A1-keyed values
 
 @pytest.mark.timeout(60)
 def test_generate_data_with_defaults(client):
@@ -25,12 +24,14 @@ def test_generate_data_with_defaults(client):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "headers" in data
-    assert isinstance(data["headers"], list) and len(data["headers"]) > 0
-    assert "rows" in data
-    assert isinstance(data["rows"], list)
-    for row in data["rows"]:
-        assert len(row) == len(data["headers"])
+    assert "cells" in data
+    cells = data["cells"]
+    assert isinstance(cells, dict) and len(cells) > 0
+    # All keys must be A1-style addresses
+    import re
+    a1_pattern = re.compile(r'^[A-Z]+[1-9][0-9]*$')
+    for key in cells:
+        assert a1_pattern.match(key), f"Expected A1 key, got: {key!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -39,8 +40,8 @@ def test_generate_data_with_defaults(client):
 # Given: user_request="Employee directory",
 #        columns=["Name", "Department", "Salary", "Start Date"], row_count=5
 # When:  POST /generate-synthetic-sheet-data is called
-# Then:  response is 200, headers match exactly, len(rows) == 5
-
+# Then:  response is 200; row-1 cells match the requested column names in order;
+#        data rows cover rows 2-6 (row_count=5 data rows)
 
 @pytest.mark.timeout(60)
 def test_explicit_columns_respected(client):
@@ -54,9 +55,10 @@ def test_explicit_columns_respected(client):
         },
     )
     assert response.status_code == 200
-    data = response.json()
-    assert data["headers"] == expected_columns
-    assert len(data["rows"]) == 5
+    cells = response.json()["cells"]
+    # Header row values should match expected columns in order
+    header_values = [cells.get(f"{chr(65+i)}1") for i in range(len(expected_columns))]
+    assert header_values == expected_columns
 
 
 # ---------------------------------------------------------------------------
@@ -64,8 +66,7 @@ def test_explicit_columns_respected(client):
 # ---------------------------------------------------------------------------
 # Given: user_request="Product inventory", row_count=10
 # When:  POST /generate-synthetic-sheet-data is called
-# Then:  response is 200, len(rows) == 10
-
+# Then:  response is 200; data rows go up to row 11 (1 header + 10 data rows)
 
 @pytest.mark.timeout(60)
 def test_row_count_respected(client):
@@ -77,18 +78,25 @@ def test_row_count_respected(client):
         },
     )
     assert response.status_code == 200
-    data = response.json()
-    assert len(data["rows"]) == 10
+    cells = response.json()["cells"]
+    # Extract max row number from cell keys
+    import re
+    max_row = max(
+        int(re.match(r'^[A-Z]+([0-9]+)$', k).group(1))
+        for k in cells
+        if re.match(r'^[A-Z]+([0-9]+)$', k)
+    )
+    # 1 header row + 10 data rows = row 11 max
+    assert max_row == 11
 
 
 # ---------------------------------------------------------------------------
-# Scenario 4: Constraints guide the data
+# Scenario 4: Constraints guide the data — numeric values preserved
 # ---------------------------------------------------------------------------
 # Given: user_request="Student grades", columns=["Name", "Score"],
 #        row_count=5, constraints="All scores must be between 0 and 100"
 # When:  POST /generate-synthetic-sheet-data is called
-# Then:  response is 200, every Score value is a number between 0 and 100
-
+# Then:  response is 200; Score column values (B2:B6) are numbers in [0, 100]
 
 @pytest.mark.timeout(60)
 def test_constraints_guide_data(client):
@@ -102,23 +110,18 @@ def test_constraints_guide_data(client):
         },
     )
     assert response.status_code == 200
-    data = response.json()
-    assert data["headers"] == ["Name", "Score"]
-    assert len(data["rows"]) == 5
-    for row in data["rows"]:
-        score = row[1]
-        # Score might be int or float from LLM
-        assert isinstance(score, (int, float)), f"Score should be numeric, got {type(score)}: {score}"
+    cells = response.json()["cells"]
+    assert cells.get("A1") == "Name"
+    assert cells.get("B1") == "Score"
+    for row in range(2, 7):
+        score = cells.get(f"B{row}")
+        assert isinstance(score, (int, float)), f"B{row} should be numeric, got {type(score)}: {score}"
         assert 0 <= score <= 100, f"Score {score} out of range [0, 100]"
 
 
 # ---------------------------------------------------------------------------
 # Scenario 5: Missing user_request returns 422
 # ---------------------------------------------------------------------------
-# Given: request body is {"row_count": 10} (no user_request)
-# When:  POST /generate-synthetic-sheet-data is called
-# Then:  response is 422
-
 
 def test_missing_user_request_returns_422(client):
     response = client.post(

@@ -19,6 +19,9 @@ var univerAPI;
 
     // --- Selection / focus tracking ---
     setupSelectionTracking();
+
+    // --- Tutor highlights (re-applied on every iframe mount) ---
+    applyHighlights(window.__HIGHLIGHTS__);
 })();
 
 /**
@@ -53,8 +56,11 @@ function getActiveCellPosition() {
         var col = range.getColumn();     // 0-based
         var colLetter = columnIndexToLetter(col);
         var cellRef = colLetter + (row + 1); // e.g. "B3"
+        var sheetName = sheet.getSheetName ? sheet.getSheetName()
+                      : (sheet.getName ? sheet.getName() : null);
 
         return {
+            sheetName: sheetName,        // active tab name — used by tutor for targeting
             row: row,
             col: col,
             rowDisplay: row + 1,         // 1-based for display
@@ -104,6 +110,104 @@ function setupSelectionTracking() {
         updateCellInfo();
     } catch (e) {
         console.warn("Could not register selection listener:", e);
+    }
+}
+
+/**
+ * Parse an A1-notation range string into {r1, c1, r2, c2} (0-based).
+ * Handles single cells ("C2") and ranges ("C2:C11").
+ */
+function _parseA1Range(a1) {
+    var m = a1.match(/^([A-Za-z]+)(\d+)(?::([A-Za-z]+)(\d+))?$/);
+    if (!m) return null;
+    function colToIdx(s) {
+        s = s.toUpperCase();
+        var n = 0;
+        for (var i = 0; i < s.length; i++) n = n * 26 + s.charCodeAt(i) - 64;
+        return n - 1; // 0-based
+    }
+    var r1 = parseInt(m[2], 10) - 1;
+    var c1 = colToIdx(m[1]);
+    var r2 = m[3] ? parseInt(m[4], 10) - 1 : r1;
+    var c2 = m[3] ? colToIdx(m[3]) : c1;
+    return { r1: r1, c1: c1, r2: r2, c2: c2 };
+}
+
+/**
+ * Find a sheet by tab name. Returns null (never falls back to active sheet)
+ * so callers can skip painting rather than silently target the wrong tab.
+ */
+function _findSheetByName(workbook, name) {
+    try {
+        var sheets = workbook.getSheets ? workbook.getSheets() : [];
+        for (var i = 0; i < sheets.length; i++) {
+            var s = sheets[i];
+            var sName = s.getSheetName ? s.getSheetName() : (s.getName ? s.getName() : null);
+            if (sName === name) return s;
+        }
+        // Strict: no match — warn with available names so bugs are visible
+        var available = sheets.map(function(s) {
+            return s.getSheetName ? s.getSheetName() : (s.getName ? s.getName() : "?");
+        });
+        console.warn("_findSheetByName: no sheet named '" + name + "'. Available: [" + available.join(", ") + "]");
+    } catch (e) {}
+    return null;
+}
+
+/**
+ * Apply tutor highlight groups to the spreadsheet.
+ * payload: array of {sheet, ranges, color} — same format as window.__HIGHLIGHTS__.
+ * Safe to call with null/undefined (no-op).
+ */
+function applyHighlights(payload) {
+    if (!payload || !Array.isArray(payload) || payload.length === 0) return;
+    try {
+        var workbook = univerAPI.getActiveWorkbook();
+        if (!workbook) return;
+        var _switchedTab = false;
+        payload.forEach(function (g) {
+            var sheet = _findSheetByName(workbook, g.sheet);
+            if (!sheet) return;
+            // Bring the first highlighted tab into view so the student sees it
+            if (!_switchedTab) {
+                try {
+                    if (workbook.setActiveSheet) workbook.setActiveSheet(sheet);
+                    else if (sheet.activate) sheet.activate();
+                } catch (e) {
+                    console.warn("applyHighlights: could not switch tab", e);
+                }
+                _switchedTab = true;
+            }
+            var color = g.color || "#fff3cd";
+            (g.ranges || []).forEach(function (a1) {
+                try {
+                    var range = null;
+                    // Try A1-string overload first
+                    if (sheet.getRange) {
+                        try { range = sheet.getRange(a1); } catch (e1) {}
+                    }
+                    // Fallback: parse A1 and call numeric overload
+                    if (!range) {
+                        var coords = _parseA1Range(a1);
+                        if (coords && sheet.getRange) {
+                            range = sheet.getRange(
+                                coords.r1, coords.c1,
+                                coords.r2 - coords.r1 + 1,
+                                coords.c2 - coords.c1 + 1
+                            );
+                        }
+                    }
+                    if (range) {
+                        if (range.setBackgroundColor) range.setBackgroundColor(color);
+                        else if (range.setBackground) range.setBackground(color);
+                    }
+                } catch (e) {
+                    console.warn("applyHighlights: could not apply range", a1, e);
+                }
+            });
+        });
+    } catch (e) {
+        console.warn("applyHighlights failed:", e);
     }
 }
 

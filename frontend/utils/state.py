@@ -139,6 +139,18 @@ def initialize_session_state():
     if "exercise_skill_gaps" not in st.session_state:
         st.session_state["exercise_skill_gaps"] = []
 
+    # Tutor hint-ladder overlay state (transient — not in PERSIST_KEYS, clears on session end)
+    if "active_highlights" not in st.session_state:
+        st.session_state["active_highlights"] = None
+    if "active_demo" not in st.session_state:
+        st.session_state["active_demo"] = None
+    if "hint_level" not in st.session_state:
+        st.session_state["hint_level"] = 1
+    if "current_step_index" not in st.session_state:
+        st.session_state["current_step_index"] = 0
+    if "_last_selection" not in st.session_state:
+        st.session_state["_last_selection"] = None
+
     if "selected_page" not in st.session_state:
         st.session_state["selected_page"] = "Onboarding"
 
